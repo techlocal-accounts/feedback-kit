@@ -4,6 +4,7 @@ export const DEFAULT_PRIVATE_SELECTORS = [
   "input", "textarea", "select", "[contenteditable]", "[data-feedback-private]",
   "[data-private]", "[data-sensitive]", "[data-phi]", "[data-pii]", "iframe", "video", "canvas",
 ] as const;
+export const MAX_SOURCE_IMAGE_BYTES = 12_000_000;
 
 export class ClinicalMaskError extends Error {}
 export class FeedbackCaptureError extends Error {}
@@ -113,6 +114,7 @@ export async function compressFeedbackCanvas(source: HTMLCanvasElement, doc: Doc
 }
 
 export async function compressFeedbackImageFile(file: File, doc: Document = document): Promise<CapturedFeedbackImage> {
+  if (file.size > MAX_SOURCE_IMAGE_BYTES) throw new FeedbackCaptureError("Image is too large to prepare");
   if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new FeedbackCaptureError("Unsupported image type");
   if (file.type === "image/gif") {
     const view = doc.defaultView;

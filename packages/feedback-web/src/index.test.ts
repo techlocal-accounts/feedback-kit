@@ -32,6 +32,11 @@ describe("private screenshot clone", () => {
 });
 
 describe("capture lifecycle", () => {
+	 it("rejects oversized image input before decoding", async () => {
+	   const file = new File([], "oversized.png", {type: "image/png"});
+	   Object.defineProperty(file, "size", {value: 12_000_001});
+	   await expect(compressFeedbackImageFile(file)).rejects.toBeInstanceOf(FeedbackCaptureError);
+	 });
   it("never starts rasterization when a clinical mask is missing", async () => {
     document.body.innerHTML = `<div data-clinical-content>Patient chart</div>`;
     const renderer = vi.fn();
