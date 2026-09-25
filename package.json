@@ -1,0 +1,17 @@
+{
+  "name": "techlocal-feedback-kit",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/feedback-core/tsconfig.json --noEmit && tsc -p packages/feedback-web/tsconfig.json --noEmit && tsc -p packages/feedback-runner/tsconfig.json --noEmit",
+    "build": "pnpm --filter @techlocal-accounts/feedback-core build && pnpm --filter @techlocal-accounts/feedback-web build && pnpm --filter @techlocal-accounts/feedback-runner build"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
+    "jsdom": "^28.1.0"
+  }
+}

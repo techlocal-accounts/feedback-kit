@@ -1,0 +1,13 @@
+{
+  "name": "@techlocal-accounts/feedback-runner",
+  "version": "0.1.0",
+  "description": "Local fenced Codex runner for Tech Local feedback queues",
+  "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-runner"},
+  "type": "module",
+  "files": ["dist", "README.md"],
+  "exports": {".": {"types": "./dist/index.d.ts", "default": "./dist/index.js"}},
+  "scripts": {"build": "tsc -p tsconfig.build.json"},
+  "publishConfig": {"registry": "https://npm.pkg.github.com", "access": "restricted"},
+  "dependencies": {"@techlocal-accounts/feedback-core": "workspace:*"},
+  "devDependencies": {"@types/node": "^22.0.0"}
+}
