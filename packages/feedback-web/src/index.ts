@@ -24,6 +24,8 @@ export type CaptureOptions = {
   clinical?: {isClinicalScreen: boolean; requiredMaskSelectors: readonly string[]};
   /** A stable app-owned selector for capture UI that should not appear in the image. */
   excludeSelectors?: readonly string[];
+  /** App-specific clone cleanup runs after the shared private masks. */
+  prepareClone?: (clone: Document) => void;
   filePrefix?: string;
   /** Dependency injection for deterministic integration tests. */
   renderer?: Html2Canvas;
@@ -152,7 +154,11 @@ export async function captureFeedbackViewport(options: CaptureOptions = {}): Pro
     windowWidth: viewportDimension(win.innerWidth), windowHeight: viewportDimension(win.innerHeight),
     scale: Math.min(2, Math.max(1, win.devicePixelRatio || 1)),
     x: Math.max(0, win.scrollX), y: Math.max(0, win.scrollY),
-    onclone: clone => { maskFeedbackClone(clone, options); cloneMasked = true; },
+    onclone: clone => {
+      maskFeedbackClone(clone, options);
+      options.prepareClone?.(clone);
+      cloneMasked = true;
+    },
   };
   const canvas = await renderer(doc.documentElement, renderOptions);
   if (!cloneMasked) throw new FeedbackCaptureError("Screenshot clone was not masked");

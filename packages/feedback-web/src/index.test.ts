@@ -65,7 +65,8 @@ describe("capture lifecycle", () => {
     });
     try {
       const result = await captureFeedbackViewport({renderer: renderer as never,
-        clinical: {isClinicalScreen: true, requiredMaskSelectors: ["[data-clinical-content]"]}});
+        clinical: {isClinicalScreen: true, requiredMaskSelectors: ["[data-clinical-content]"]},
+        prepareClone: clone => expect(clone.querySelector("[data-clinical-content]")?.textContent).toBe("")});
       expect(result).toMatchObject({mimeType: "image/jpeg", byteSize: 4, width: 1_280, height: 640});
       expect(document.querySelector("[data-clinical-content]")?.textContent).toBe("Patient chart");
     } finally { contextSpy.mockRestore(); blobSpy.mockRestore(); }
