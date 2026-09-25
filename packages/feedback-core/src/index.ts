@@ -1,11 +1,14 @@
 import { z } from "zod";
+import {
+  MAX_SCREENSHOTS, MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES,
+  MAX_SAFE_STATE_FIELDS, MAX_SAFE_STATE_BYTES,
+} from "./limits.js";
+export {
+  MAX_SCREENSHOTS, MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES,
+  MAX_SAFE_STATE_FIELDS, MAX_SAFE_STATE_BYTES,
+} from "./limits.js";
 
 export const FEEDBACK_CONTRACT_VERSION = 1 as const;
-export const MAX_SCREENSHOTS = 3;
-export const MAX_IMAGE_BYTES = 900_000;
-export const MAX_TOTAL_IMAGE_BYTES = 2_400_000;
-export const MAX_SAFE_STATE_FIELDS = 20;
-export const MAX_SAFE_STATE_BYTES = 4_096;
 const stateBytes = (value: Record<string, unknown>) => new TextEncoder().encode(JSON.stringify(value)).byteLength;
 
 export const feedbackKindSchema = z.enum(["bug", "suggestion"]);

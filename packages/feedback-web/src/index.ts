@@ -1,4 +1,4 @@
-import { MAX_IMAGE_BYTES } from "@techlocal-accounts/feedback-core";
+import { MAX_IMAGE_BYTES } from "@techlocal-accounts/feedback-core/limits";
 
 export const DEFAULT_PRIVATE_SELECTORS = [
   "input", "textarea", "select", "[contenteditable]", "[data-feedback-private]",

@@ -2,9 +2,11 @@ import {describe, expect, it, vi} from "vitest";
 import {
   acceptFeedbackSubmission, canSubmitFeedback, feedbackSubmissionV1Schema,
   FeedbackForbiddenError, FeedbackScreenshotOwnershipError, releaseAvailability,
+  MAX_IMAGE_BYTES,
   routeFeedback, sanitizeSafeState, verifiedActorFromSession,
   type FeedbackIntegrationConfig, type FeedbackSubmissionV1,
 } from "./index";
+import {MAX_IMAGE_BYTES as captureLimit} from "./limits";
 
 const actor = verifiedActorFromSession({userId: "u1", tenantId: "tenant-one", isTester: true});
 const owner = verifiedActorFromSession({userId: "owner", isOwner: true});
@@ -33,6 +35,10 @@ function config(overrides: Partial<FeedbackIntegrationConfig> = {}): FeedbackInt
 }
 
 describe("versioned feedback contract", () => {
+  it("exports the same image cap through the light capture entry point", () => {
+    expect(captureLimit).toBe(900_000);
+    expect(MAX_IMAGE_BYTES).toBe(captureLimit);
+  });
   it("preserves submitted wording byte for byte and rejects client identity", () => {
     expect(feedbackSubmissionV1Schema.parse(submission).description).toBe(submission.description);
     expect(feedbackSubmissionV1Schema.safeParse({...submission, userId: "owner"}).success).toBe(false);
