@@ -10,8 +10,8 @@
     "build": "pnpm --filter @techlocal-accounts/feedback-core build && pnpm --filter @techlocal-accounts/feedback-web build && pnpm --filter @techlocal-accounts/feedback-runner build"
   },
   "devDependencies": {
+    "jsdom": "^28.1.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4",
-    "jsdom": "^28.1.0"
+    "vitest": "^4.1.11"
   }
 }
