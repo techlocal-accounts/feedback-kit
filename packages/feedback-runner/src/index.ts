@@ -2,6 +2,7 @@ import type { ReleaseIdentity, VerifiedDelivery } from "@techlocal-accounts/feed
 export { LocalCodexTaskAdapter } from "./codex-cli.js";
 export { LocalGitPublicationAdapter } from "./local-git.js";
 export { CommandValidationAdapter, type ValidationCommand } from "./validation.js";
+export { createFeedbackPermissionConfig, assertFeedbackPermissionConfiguration, type FeedbackPermissionConfig } from "./permissions.js";
 
 /** Queue methods must check reportId + runId + fence in one atomic write. */
 export interface FencedClaim {
@@ -35,12 +36,20 @@ export interface IsolatedCheckout {
   baseSha: string;
 }
 
+export interface PublicationGuard {
+  signal: AbortSignal;
+  /** Renew/check the exact fenced claim immediately before the parent pushes. */
+  assertLease(): Promise<void>;
+}
+
 export interface GitPublicationAdapter {
   createIsolatedCheckout(claim: FencedClaim): Promise<IsolatedCheckout>;
-  /** Refuse uncommitted files, merge commits, unsafe paths, or changes outside the candidate. */
+  /** Inspect prepared files before snapshot, then require a clean parent-created candidate. */
   inspect(checkout: IsolatedCheckout): Promise<{ headSha: string; changedPaths: string[] }>;
+  /** The parent creates one commit after inspecting protected paths and checking its lease. */
+  snapshot(checkout: IsolatedCheckout, claim: FencedClaim): Promise<{ headSha: string; changedPaths: string[] }>;
   /** Atomically compare current main to base and publish by fast-forward only. */
-  publish(checkout: IsolatedCheckout, expectedHead: string): Promise<void>;
+  publish(checkout: IsolatedCheckout, expectedHead: string, guard: PublicationGuard): Promise<void>;
   discard(checkout: IsolatedCheckout): Promise<void>;
 }
 
@@ -53,8 +62,10 @@ export interface CodexTaskAdapter {
 }
 
 export interface ValidationAdapter {
-  focused(checkout: IsolatedCheckout, changedPaths: string[]): Promise<void>;
-  shared(checkout: IsolatedCheckout): Promise<void>;
+  /** Install locked dependencies before Codex; package credentials belong only to this parent step. */
+  prepare(checkout: IsolatedCheckout, signal: AbortSignal): Promise<void>;
+  focused(checkout: IsolatedCheckout, changedPaths: string[], signal: AbortSignal): Promise<void>;
+  shared(checkout: IsolatedCheckout, signal: AbortSignal): Promise<void>;
 }
 
 export interface LocalFeedbackRunnerConfig {
@@ -88,7 +99,10 @@ function pathMatches(path: string, pattern: string): boolean {
 }
 
 export function findProtectedPaths(changedPaths: readonly string[], patterns: readonly string[]): string[] {
-  return changedPaths.filter(path => patterns.some(pattern => pathMatches(path, pattern)));
+  return changedPaths.filter(path =>
+    /(^|\/)(?:AGENTS\.md|SPECIFICATIONS\.md|\.env[^/]*|\.codex|\.agents|\.github|\.techlocal|\.npmrc|\.pnpmfile\.(?:cjs|mjs)|\.yarnrc(?:\.yml)?|package\.json|(?:pnpm|package)-lock\.ya?ml|package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lockb?|pnpm-workspace\.yaml|deno\.(?:jsonc?|lock)|Cargo\.(?:toml|lock)|requirements(?:[^/]*)\.txt|pyproject\.toml|uv\.lock|Pipfile(?:\.lock)?|Podfile(?:\.lock)?|Package\.(?:swift|resolved))(?:\/|$)/.test(path) ||
+    /(^|\/)scripts\/(?:feedback-|run-feedback|install-feedback|verify-feedback)/.test(path) ||
+    patterns.some(pattern => pathMatches(path, pattern)));
 }
 
 async function assertLease(queue: FencedQueue, claim: FencedClaim, signal: AbortSignal): Promise<void> {
@@ -126,21 +140,29 @@ export async function pollFeedbackOnce(config: LocalFeedbackRunnerConfig): Promi
     await assertLease(config.queue, claim, controller.signal);
     checkout = await config.git.createIsolatedCheckout(claim);
     await assertLease(config.queue, claim, controller.signal);
+    await config.validation.prepare(checkout, controller.signal);
+    await assertLease(config.queue, claim, controller.signal);
     await config.codex.implement({ claim, checkout, signal: controller.signal });
     await assertLease(config.queue, claim, controller.signal);
-    const candidate = await config.git.inspect(checkout);
-    if (candidate.changedPaths.length === 0) throw new Error("Implementation made no changes");
-    const protectedChanges = findProtectedPaths(candidate.changedPaths, config.protectedPaths);
+    const prepared = await config.git.inspect(checkout);
+    if (prepared.changedPaths.length === 0) throw new Error("Implementation made no changes");
+    const protectedChanges = findProtectedPaths(prepared.changedPaths, config.protectedPaths);
     if (protectedChanges.length > 0) {
       const reason = `Protected paths require owner review: ${protectedChanges.join(", ")}`;
-      if (!await config.queue.finish(claim, { status: "needs_review", reason, changedPaths: candidate.changedPaths })) {
+      if (!await config.queue.finish(claim, { status: "needs_review", reason, changedPaths: prepared.changedPaths })) {
         throw new LostLeaseError("Feedback claim ownership changed");
       }
       return { kind: "needs_review", reportId: claim.reportId, reason };
     }
-    await config.validation.focused(checkout, candidate.changedPaths);
     await assertLease(config.queue, claim, controller.signal);
-    await config.validation.shared(checkout);
+    const candidate = await config.git.snapshot(checkout, claim);
+    if (JSON.stringify([...candidate.changedPaths].sort()) !== JSON.stringify([...prepared.changedPaths].sort())) {
+      throw new Error("Candidate scope changed during parent snapshot");
+    }
+    await assertLease(config.queue, claim, controller.signal);
+    await config.validation.focused(checkout, candidate.changedPaths, controller.signal);
+    await assertLease(config.queue, claim, controller.signal);
+    await config.validation.shared(checkout, controller.signal);
     await assertLease(config.queue, claim, controller.signal);
     const review = await config.codex.review({ claim, checkout, changedPaths: candidate.changedPaths, signal: controller.signal });
     await assertLease(config.queue, claim, controller.signal);
@@ -153,7 +175,8 @@ export async function pollFeedbackOnce(config: LocalFeedbackRunnerConfig): Promi
     }
     if (!review.releaseNote?.trim()) throw new Error("Approved fix requires a public release note");
     await assertLease(config.queue, claim, controller.signal);
-    await config.git.publish(checkout, candidate.headSha);
+    await config.git.publish(checkout, candidate.headSha, { signal: controller.signal,
+      assertLease: () => assertLease(config.queue, claim, controller.signal) });
     published = true;
     // A failed queue write after publication is recovered by the app's fenced journal.
     if (!await config.queue.finish(claim, { status: "implemented", commitSha: candidate.headSha,
