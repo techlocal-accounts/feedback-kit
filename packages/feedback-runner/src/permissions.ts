@@ -87,9 +87,12 @@ export async function assertFeedbackPermissionConfiguration(cwd: string): Promis
   }
   const paths = new Set(["/etc/codex/config.toml", "/etc/codex/managed_config.toml",
     join(process.env.CODEX_HOME ?? join(homedir(), ".codex"), "managed_config.toml")]);
+  const ignoredUserConfigs = new Set([join(homedir(), ".codex", "config.toml"),
+    join(process.env.CODEX_HOME ?? join(homedir(), ".codex"), "config.toml")]);
   let directory = resolve(cwd);
   while (true) {
-    paths.add(join(directory, ".codex", "config.toml"));
+    const projectConfig = join(directory, ".codex", "config.toml");
+    if (!ignoredUserConfigs.has(projectConfig)) paths.add(projectConfig);
     const parent = dirname(directory);
     if (parent === directory) break;
     directory = parent;

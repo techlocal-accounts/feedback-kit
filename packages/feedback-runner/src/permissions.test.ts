@@ -1,9 +1,16 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertFeedbackPermissionConfiguration, createFeedbackPermissionConfig } from "./permissions.js";
+
+vi.mock("node:os", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:os")>();
+  return { ...actual, homedir: vi.fn(actual.homedir) };
+});
+const actualHome = homedir();
+afterEach(() => vi.mocked(homedir).mockReturnValue(actualHome));
 
 describe("feedback read boundaries", () => {
   it("grants minimal runtime and explicit checkout paths, with host-home and env denial", () => {
@@ -40,6 +47,21 @@ describe("feedback read boundaries", () => {
       await mkdir(join(root, ".codex"));
       await writeFile(join(root, ".codex", "config.toml"), "sandbox_mode = 'workspace-write'\n");
       await expect(assertFeedbackPermissionConfiguration(root)).rejects.toThrow("Legacy sandbox/config profiles");
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+
+  it("ignores the canonical user config while verifying a checkout under the home directory", async () => {
+    const root = await mkdtemp(join(tmpdir(), "feedback-home-config-"));
+    try {
+      vi.mocked(homedir).mockReturnValue(root);
+      const checkout = join(root, "projects", "feedback-run", "repo");
+      await mkdir(checkout, { recursive: true });
+      await mkdir(join(root, ".codex"));
+      await writeFile(join(root, ".codex", "config.toml"), "sandbox_mode = 'workspace-write'\n");
+      await expect(assertFeedbackPermissionConfiguration(checkout)).resolves.toBeUndefined();
+      await mkdir(join(root, "projects", ".codex"));
+      await writeFile(join(root, "projects", ".codex", "config.toml"), "sandbox_mode = 'workspace-write'\n");
+      await expect(assertFeedbackPermissionConfiguration(checkout)).rejects.toThrow("Legacy sandbox/config profiles");
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 

@@ -4,7 +4,7 @@ Private, versioned building blocks extracted from BibleGrid's feedback behavior:
 
 - `@techlocal-accounts/feedback-core@0.1.0`: the v1 submission/receipt contract, verified-actor visibility and routing policy, safe-state allowlist, server submission boundary, and storage/reviewer/release adapter interfaces.
 - `@techlocal-accounts/feedback-web@0.1.0`: headless viewport and file capture with clone-time privacy masking and a required clinical mask guard.
-- `@techlocal-accounts/feedback-runner@0.1.1`: local Codex processing with credential-isolated dependency preparation, parent snapshots, and lease-guarded publication.
+- `@techlocal-accounts/feedback-runner@0.1.2`: local Codex processing with credential-isolated dependency preparation, parent snapshots, and lease-guarded publication.
 
 React and SwiftUI presentation, authentication, private storage, reviewer access, release verification, and database schema remain app-owned. The packages contain no production credentials or customer data. See [adapter recipes](docs/integration-recipes.md).
 
