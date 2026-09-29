@@ -1,5 +1,5 @@
 import {defineConfig} from "vitest/config";
 
 export default defineConfig({
-  test: {include: ["packages/**/*.test.ts"], environment: "jsdom", maxWorkers: 1},
+  test: {include: ["packages/**/*.test.ts", "scripts/**/*.test.mjs"], environment: "jsdom", maxWorkers: 1},
 });
