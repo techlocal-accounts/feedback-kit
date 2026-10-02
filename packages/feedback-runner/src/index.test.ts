@@ -209,6 +209,25 @@ describe("synthetic Git publication", () => {
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 
+  it("publishes incidents only to their PR branch with a prod base", async () => {
+    const root=await mkdtemp(join(tmpdir(),"incident-pr-test-"));
+    try {
+      const bare=join(root,"remote.git"), source=join(root,"source"), runs=join(root,"runs");
+      await mkdir(runs);run(root,"init","--bare",bare);run(root,"clone",bare,source);
+      run(source,"config","user.name","Synthetic Test");run(source,"config","user.email","test@example.com");
+      run(source,"checkout","-b","prod");await writeFile(join(source,"README.md"),"before\n");
+      run(source,"add",".");run(source,"commit","-m","chore: fixture");run(source,"push","origin","prod");
+      const before=run(source,"rev-parse","HEAD");const create=vi.fn(async()=>undefined);
+      const adapter=new LocalGitPublicationAdapter({repositoryPath:source,workingRoot:runs,remoteUrl:bare,baseBranch:"prod",pullRequest:{branch:"codex/incident-fixture",create}});
+      const checkout=await adapter.createIsolatedCheckout({...claim,kind:"incident"});
+      await writeFile(join(checkout.path,"README.md"),"fixed\n");const candidate=await adapter.snapshot(checkout,claim);
+      await adapter.publish(checkout,candidate.headSha,{signal:new AbortController().signal,assertLease:async()=>undefined});
+      expect(run(root,"--git-dir",bare,"rev-parse","refs/heads/prod")).toBe(before);
+      expect(run(root,"--git-dir",bare,"rev-parse","refs/heads/codex/incident-fixture")).toBe(candidate.headSha);
+      expect(create).toHaveBeenCalledOnce();await adapter.discard(checkout);
+    } finally {await rm(root,{recursive:true,force:true});}
+  });
+
   it("publishes one reviewed fast-forward commit and rejects moving main", async () => {
     const root = await mkdtemp(join(tmpdir(), "feedback-git-test-"));
     const bare = join(root, "remote.git");

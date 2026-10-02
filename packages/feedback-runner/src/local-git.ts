@@ -54,10 +54,14 @@ export class LocalGitPublicationAdapter implements GitPublicationAdapter {
 
   constructor(private readonly input: {
     repositoryPath: string; workingRoot: string; remoteUrl?: string; authorName?: string; authorEmail?: string;
+    baseBranch?: string;
+    pullRequest?: { branch: string; create(input: { checkout: IsolatedCheckout; headSha: string; signal: AbortSignal }): Promise<void> };
   }) {
     if (!isAbsolute(input.repositoryPath) || !isAbsolute(input.workingRoot)) {
       throw new Error("Git runner paths must be absolute");
     }
+    if (!/^[A-Za-z0-9_./-]+$/.test(input.baseBranch ?? "main") || (input.baseBranch ?? "main").includes("..")) throw new Error("Invalid target branch");
+    if (input.pullRequest && !/^codex\/[a-z0-9-]{1,100}$/.test(input.pullRequest.branch)) throw new Error("Invalid PR branch");
     for (const value of [input.authorName, input.authorEmail]) {
       if (value !== undefined && (!value.trim() || value.length > 200 || /[\n\r\0]/.test(value))) {
         throw new Error("Invalid feedback commit identity");
@@ -74,7 +78,7 @@ export class LocalGitPublicationAdapter implements GitPublicationAdapter {
       await git(workingRoot, "clone", "--no-local", "--no-checkout", "--", repositoryPath, path);
       const remoteUrl = this.input.remoteUrl ?? await git(repositoryPath, "remote", "get-url", "origin");
       await git(path, "remote", "set-url", "origin", remoteUrl);
-      await git(path, "fetch", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main");
+      await git(path, "fetch", "--no-tags", "origin", `+refs/heads/${this.input.baseBranch ?? "main"}:refs/remotes/origin/main`);
       const baseSha = await git(path, "rev-parse", "refs/remotes/origin/main");
       if (!shaPattern.test(baseSha)) throw new Error("Invalid main commit");
       await git(path, "checkout", "--detach", baseSha);
@@ -160,10 +164,17 @@ export class LocalGitPublicationAdapter implements GitPublicationAdapter {
     const controls = await this.assertControls(checkout);
     const candidate = await this.inspect(checkout);
     if (!controls.snapshotSha || candidate.headSha !== expectedHead) throw new Error("Candidate changed after review");
-    await guardedGit(checkout.path, guard.signal, "fetch", "--no-tags", "--", controls.remoteUrl, "+refs/heads/main:refs/remotes/origin/main");
+    await guardedGit(checkout.path, guard.signal, "fetch", "--no-tags", "--", controls.remoteUrl, `+refs/heads/${this.input.baseBranch ?? "main"}:refs/remotes/origin/main`);
     const currentMain = await guardedGit(checkout.path, guard.signal, "rev-parse", "refs/remotes/origin/main");
     if (currentMain !== checkout.baseSha) throw new MovingMainError("Main moved during feedback review");
     await guard.assertLease();
+    if (this.input.pullRequest) {
+      await guardedGit(checkout.path, guard.signal, "push", "--", controls.remoteUrl,
+        `HEAD:refs/heads/${this.input.pullRequest.branch}`);
+      await guard.assertLease();
+      await this.input.pullRequest.create({ checkout, headSha: expectedHead, signal: guard.signal });
+      return;
+    }
     // A concurrent push after fetch is rejected by Git's ordinary non-force push.
     await guardedGit(checkout.path, guard.signal, "push", "--", controls.remoteUrl, "HEAD:refs/heads/main");
   }

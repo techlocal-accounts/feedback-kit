@@ -49,6 +49,14 @@ describe("parent dependency preparation", () => {
     } finally { await rm(root, { recursive: true, force: true }); }
   });
 
+  it("rejects validation directories outside the isolated checkout", async()=>{
+    const root=await mkdtemp(join(tmpdir(),"validation-cwd-test-"));
+    try {
+      const adapter=new CommandValidationAdapter({install:[],focused:[{cwd:"../",argv:[process.execPath,"-e","process.exit(0)"]}],shared:[]});
+      await expect(adapter.focused({path:root,baseSha:"a".repeat(40)},[],new AbortController().signal)).rejects.toThrow("escapes checkout");
+    } finally {await rm(root,{recursive:true,force:true});}
+  });
+
   it.each([
     ["pnpm", "install", "--frozen-lockfile"],
     ["bun", "install", "--ignore-scripts"],

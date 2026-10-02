@@ -1,6 +1,6 @@
 # Local feedback runner
 
-Version `0.1.2` of `pollFeedbackOnce` coordinates dependency preparation, a local Codex implementation, a parent-created commit, a separate read-only Codex review, focused and shared validation, and a parent-owned fast-forward publication gate. An empty queue poll starts no model process. Suggestions and changes to protected paths return to owner review. A published commit is recorded as implemented; `verifyImplementedFeedback` marks it available only after the app supplies a verified delivery receipt.
+Version `0.2.0` of `pollFeedbackOnce` coordinates dependency preparation, a local Codex implementation, a parent-created commit, a separate read-only Codex review, focused and shared validation, and a parent-owned fast-forward publication gate. An empty queue poll starts no model process. Suggestions and changes to protected paths return to owner review. A published commit is recorded as implemented; `verifyImplementedFeedback` marks it available only after the app supplies a verified delivery receipt.
 
 The host app must provide a queue adapter whose `claimNext`, `renew`, `owns`, and `finish` operations use the report ID, run ID, and opaque fence in atomic database predicates. A worker must never infer ownership from time alone. Keep raw attachments outside `claim.task`; provide only an app-approved, bounded and redacted task. Persist a publication journal so an interrupted `finish` after Git push can reconcile the commit without rerunning Codex. Resume or inspect failed workspaces before retrying.
 
@@ -25,3 +25,27 @@ Both local adapters accept optional trusted `readOnlyPaths` for credential-free 
 Package-manager configuration, dependency manifests/lockfiles, worker/governance paths, and `.codex`/`.agents`/`.github`/`.techlocal` controls are always protected. App-specific protected clinical, auth, billing, schema, and release paths add to that minimum; configuration cannot remove it.
 
 The app chooses protected paths, focused and shared checks, release preparation, publication identity, and release verification. In particular, BibleGrid's existing release preparation and mobile delivery gates remain in its current parent worker; Stennar and PracticeDay should switch workers only after their storage adapters, journal, and release gates have been tested against the existing queue and the old worker has no claim. This package does not upload native builds or start an Amplify release.
+
+## Persistent incident investigations (0.2.0)
+
+Incident claims use the same fenced orchestration as feedback bugs. `PersistentCodexTaskAdapter`
+starts a saved app-server chat and awaits `onThread` before the first model turn. Use a dedicated
+minimal config home; share only signed-in auth/session storage and the configured SQLite home.
+Never use the primary config home or copy broad sandbox, plugin or MCP settings into this home.
+The selected CLI must support the configured model; verify a bounded synthetic turn before activation.
+The adapter disables integrations and applies the same minimal-read, denied-home/no-network profile.
+Usage updates call `onUsage`; stop at the shared implementation/review `tokenBudget` (max50,000).
+One in-flight response can overshoot the threshold before its usage notification arrives. Receipt
+failure, lost lease, ambiguous RPC, timeout or budget exhaustion stops the child process group.
+
+Use `LocalGitPublicationAdapter({baseBranch, pullRequest: {branch, create}})` for incidents.
+`branch` must begin `codex/`; only that branch is pushed. The trusted `create` callback reconciles
+an existing PR and then creates a ready-for-review PR. It must journal the PR before acknowledging
+the queue. No merge or deployment is performed. Existing feedback callers retain their original
+main publication behavior. `ValidationCommand.cwd` optionally selects a repository subdirectory;
+it cannot escape the isolated checkout. The host wrapper supplies app-specific checks and protected
+paths, a per-project daily budget, source opt-in and one job per issue episode.
+
+Tech Local's concrete host adapter and operational runbook are in the website repository at
+`scripts/engineering-runner.mjs` and `docs/observability-runbook.md`. Other adopters can supply both
+feedback and incident queue adapters without installing an observability-specific feedback UI.

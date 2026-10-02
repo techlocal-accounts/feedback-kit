@@ -1,4 +1,5 @@
 import type { ReleaseIdentity, VerifiedDelivery } from "@techlocal-accounts/feedback-core";
+export { PersistentCodexTaskAdapter } from "./codex-persistent.js";
 export { LocalCodexTaskAdapter } from "./codex-cli.js";
 export { LocalGitPublicationAdapter } from "./local-git.js";
 export { CommandValidationAdapter, type ValidationCommand } from "./validation.js";
@@ -9,7 +10,7 @@ export interface FencedClaim {
   reportId: string;
   runId: string;
   fence: string;
-  kind: "bug" | "suggestion";
+  kind: "bug" | "suggestion" | "incident";
   /** Redacted, bounded text prepared by the host app. Never include private attachment URLs. */
   task: string;
   observedRelease: ReleaseIdentity;
@@ -69,6 +70,7 @@ export interface ValidationAdapter {
 }
 
 export interface LocalFeedbackRunnerConfig {
+  signal?: AbortSignal;
   queue: FencedQueue;
   git: GitPublicationAdapter;
   codex: CodexTaskAdapter;
@@ -113,7 +115,7 @@ async function assertLease(queue: FencedQueue, claim: FencedClaim, signal: Abort
 export async function pollFeedbackOnce(config: LocalFeedbackRunnerConfig): Promise<PollResult> {
   const claim = await config.queue.claimNext();
   if (!claim) return { kind: "empty" };
-  if (claim.kind !== "bug") {
+  if (claim.kind !== "bug" && claim.kind !== "incident") {
     const reason = "Suggestions require owner review";
     await config.queue.finish(claim, { status: "needs_review", reason });
     return { kind: "needs_review", reportId: claim.reportId, reason };
@@ -123,6 +125,9 @@ export async function pollFeedbackOnce(config: LocalFeedbackRunnerConfig): Promi
   }
 
   const controller = new AbortController();
+  const stop = () => controller.abort();
+  config.signal?.addEventListener('abort', stop, { once: true });
+  if (config.signal?.aborted) stop();
   let leaseLost = false;
   let renewing = false;
   const timer = setInterval(() => {
@@ -195,6 +200,7 @@ export async function pollFeedbackOnce(config: LocalFeedbackRunnerConfig): Promi
     return { kind: "failed", reportId: claim.reportId, reason };
   } finally {
     clearInterval(timer);
+    config.signal?.removeEventListener('abort', stop);
     // Keep failed and protected workspaces for inspection. Only successful work is discarded.
   }
 }
