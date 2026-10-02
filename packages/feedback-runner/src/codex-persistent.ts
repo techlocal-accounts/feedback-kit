@@ -105,7 +105,7 @@ export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
         }
       });
       void(async()=>{
-        await request('initialize',{clientInfo:{name:'tech-local-engineering-runner',version:'0.2.0'},capabilities:{experimentalApi:true}});
+        await request('initialize',{clientInfo:{name:'feedback-kit-runner',version:'0.2.0'},capabilities:{experimentalApi:true}});
         send({method:'initialized',params:{}});
         const started=await request('thread/start',{cwd:checkout.path,approvalPolicy:'never',ephemeral:false}) as {thread:{id:string}};
         threadId=started.thread.id;

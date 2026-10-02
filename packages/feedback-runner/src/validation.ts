@@ -85,7 +85,7 @@ export class CommandValidationAdapter implements ValidationAdapter {
     packageReadToken?: () => Promise<string | undefined>;
     /** Trusted CLI binary; test fixtures may use a synthetic executable. */
     sandboxExecutable?: string;
-    /** Only isolated deps/Git metadata and a pinned Tech Local standards bundle are accepted. */
+    /** Only isolated deps/Git metadata and the pinned standards compatibility allowlist are accepted. */
     readOnlyPaths?: readonly string[];
   }) {
     for (const command of input.install) assertLockedInstall(command);

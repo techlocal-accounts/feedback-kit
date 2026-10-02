@@ -1,7 +1,7 @@
 {
   "name": "@techlocal-accounts/feedback-core",
   "version": "0.1.0",
-  "description": "Versioned feedback contract and policies for Tech Local apps",
+  "description": "Versioned feedback contracts, submission policies and application adapter interfaces",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-core"},
   "type": "module",
   "files": ["dist", "README.md"],

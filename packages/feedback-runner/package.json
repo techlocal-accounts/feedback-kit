@@ -1,7 +1,7 @@
 {
   "name": "@techlocal-accounts/feedback-runner",
   "version": "0.2.0",
-  "description": "Local fenced Codex runner for Tech Local feedback queues",
+  "description": "Local Codex orchestration for fenced feedback and incident queues",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-runner"},
   "type": "module",
   "files": ["dist", "README.md"],

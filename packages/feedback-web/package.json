@@ -1,7 +1,7 @@
 {
   "name": "@techlocal-accounts/feedback-web",
   "version": "0.1.0",
-  "description": "Headless, privacy-masked web feedback capture for Tech Local apps",
+  "description": "Headless web feedback capture with privacy masking and bounded image compression",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-web"},
   "type": "module",
   "files": ["dist", "README.md"],

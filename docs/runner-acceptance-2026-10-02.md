@@ -24,5 +24,5 @@ customer data or production release was involved.
 
 The existing synthetic regression suite separately covers suggestions,
 protected paths, failed validation, lost leases and moving main. Neither
-pilot's automatic worker was enabled by this check. Each app still requires
+application's automatic worker was enabled by this check. Each app still requires
 its own report/fix journey and verified delivery adapter before activation.

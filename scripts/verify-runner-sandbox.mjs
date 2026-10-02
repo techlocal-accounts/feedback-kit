@@ -18,7 +18,7 @@ writeFileSync(join(metadata, "config"), "synthetic isolated metadata");
 writeFileSync(join(outside, "credential.txt"), "synthetic fixture");
 mkdirSync(join(workspace, "node_modules"));
 writeFileSync(join(workspace, "node_modules", "fixture.txt"), "synthetic dependency");
-const service = `co.techlocal.feedback-runner.probe.${randomUUID()}`;
+const service = `feedback-kit.runner.probe.${randomUUID()}`;
 const account = "synthetic-feedback-probe";
 let itemCreated = false;
 function inlineToml(value) {

@@ -20,11 +20,13 @@ After building, run `node scripts/verify-runner-sandbox.mjs` from the kit reposi
 
 `CommandValidationAdapter` accepts trusted `install`, optional `prepare`, `focused`, and `shared` command arrays. `install` permits only `pnpm install --frozen-lockfile --ignore-scripts`, `bun install --frozen-lockfile --ignore-scripts`, or `npm ci --ignore-scripts`, with the supported offline/audit flags. Its `packageReadToken?: () => Promise<string | undefined>` callback belongs to the app's trusted parent and resolves a read-only token from Keychain/build-secret storage. The token is injected as `NODE_AUTH_TOKEN` only for those host installers, whose output is suppressed; lifecycle scripts are disabled and pnpm also receives `--ignore-pnpmfile` so [its executable hooks](https://pnpm.io/10.x/pnpmfile) cannot read the token. All subsequent `prepare`, focused, and shared commands run inside the same minimal-read, no-network sandbox without that token. A private temporary Codex home keeps validation free of user configuration/auth; temp and Bun caches stay inside the checkout. Do not load package credentials from a report checkout or pass them through `safeEnvironment`; secret and startup-control keys are rejected there. All subprocesses have bounded timeouts and process-group termination with forced escalation on cancellation or timeout.
 
-Both local adapters accept optional trusted `readOnlyPaths` for credential-free isolated Git metadata, app dependencies, or one pinned Tech Local standards tool bundle under `~/.codex/plugins/cache/tech-local/tech-local-standards/<version>`. A broad home/plugin-cache grant is rejected. Use this for an offline audit script outside the checkout. `CommandValidationAdapter.sandboxExecutable` and `LocalCodexTaskAdapter.executable` select the trusted CLI binary; synthetic executables are only test fixtures.
+Both local adapters accept optional trusted `readOnlyPaths` for credential-free isolated Git metadata and app dependencies. Audit scripts can live inside the checkout without an extra host grant. For existing integrations, a compatibility allowlist also accepts one pinned standards bundle under `~/.codex/plugins/cache/tech-local/tech-local-standards/<version>`; installing that tool is optional. Arbitrary tool bundles and broad home/plugin-cache grants are rejected. `CommandValidationAdapter.sandboxExecutable` and `LocalCodexTaskAdapter.executable` select the trusted CLI binary; synthetic executables are only test fixtures.
 
 Package-manager configuration, dependency manifests/lockfiles, worker/governance paths, and `.codex`/`.agents`/`.github`/`.techlocal` controls are always protected. App-specific protected clinical, auth, billing, schema, and release paths add to that minimum; configuration cannot remove it.
 
-The app chooses protected paths, focused and shared checks, release preparation, publication identity, and release verification. In particular, BibleGrid's existing release preparation and mobile delivery gates remain in its current parent worker; Stennar and PracticeDay should switch workers only after their storage adapters, journal, and release gates have been tested against the existing queue and the old worker has no claim. This package does not upload native builds or start an Amplify release.
+The app chooses protected paths, focused and shared checks, release preparation, publication identity, and release verification. Keep existing web/native delivery gates in the trusted parent. Switch workers only after the storage adapters, publication journal and release gates have been tested against the existing queue and the old worker has no claim. This package does not upload native builds or start a hosting-provider release.
+
+Set `LocalGitPublicationAdapter`'s `authorName` and `authorEmail` to your approved automation identity when needed. If omitted, generated commits use `Feedback Runner <feedback-runner@example.invalid>`; they do not borrow a repository owner's identity.
 
 ## Persistent incident investigations (0.2.0)
 
@@ -46,6 +48,6 @@ main publication behavior. `ValidationCommand.cwd` optionally selects a reposito
 it cannot escape the isolated checkout. The host wrapper supplies app-specific checks and protected
 paths, a per-project daily budget, source opt-in and one job per issue episode.
 
-Tech Local's concrete host adapter and operational runbook are in the website repository at
-`scripts/engineering-runner.mjs` and `docs/observability-runbook.md`. Other adopters can supply both
-feedback and incident queue adapters without installing an observability-specific feedback UI.
+The host application supplies the queue adapter, operational runbook, budget persistence and PR
+callback. It can provide both feedback and incident queue adapters without adding a separate
+incident-reporting interface to the feedback UI.
