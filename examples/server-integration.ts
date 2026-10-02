@@ -2,7 +2,7 @@ import {
   acceptFeedbackSubmission, canSubmitFeedback, FeedbackForbiddenError,
   verifiedActorFromSession,
   type FeedbackIntegrationConfig, type FeedbackReceiptV1,
-} from "@techlocal-accounts/feedback-core";
+} from "@techlocal/feedback-core";
 
 // The application must validate the session and look up roles/tenant on its server.
 // Never construct this value from submitted feedback JSON.

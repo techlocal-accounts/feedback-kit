@@ -38,8 +38,8 @@ for (const file of files) {
     throw new Error('Unexpected package identity, version or license');
   }
   if (contents.get('package/LICENSE') !== license) throw new Error('Packaged MIT license differs from the project license');
-  if (manifest.publishConfig?.registry !== 'https://npm.pkg.github.com' || manifest.publishConfig?.access !== 'public') {
-    throw new Error('Package publication configuration is not the approved GitHub registry/public access');
+  if (manifest.publishConfig?.registry !== 'https://registry.npmjs.org' || manifest.publishConfig?.access !== 'public') {
+    throw new Error('Package publication configuration is not the approved npm registry/public access');
   }
   for (const [name, version] of Object.entries(manifest.dependencies ?? {})) {
     const workspacePackage = packages.find(candidate => candidate.name === name);

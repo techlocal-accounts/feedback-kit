@@ -26,7 +26,7 @@ importers:
 
   packages/feedback-runner:
     dependencies:
-      '@techlocal-accounts/feedback-core':
+      '@techlocal/feedback-core':
         specifier: workspace:*
         version: link:../feedback-core
     devDependencies:
@@ -36,7 +36,7 @@ importers:
 
   packages/feedback-web:
     dependencies:
-      '@techlocal-accounts/feedback-core':
+      '@techlocal/feedback-core':
         specifier: workspace:*
         version: link:../feedback-core
       html2canvas-pro:

@@ -4,13 +4,13 @@ Composable TypeScript building blocks for collecting, reviewing and optionally a
 
 | Package | Source version | Purpose |
 | --- | --- | --- |
-| [`@techlocal-accounts/feedback-core`](packages/feedback-core/README.md) | `0.1.1` | Versioned submission/receipt contracts, visibility and routing policies, safe-state allowlists, and storage/reviewer/release interfaces. |
-| [`@techlocal-accounts/feedback-web`](packages/feedback-web/README.md) | `0.1.1` | Headless screenshot/file capture with privacy masking and bounded image compression. |
-| [`@techlocal-accounts/feedback-runner`](packages/feedback-runner/README.md) | `0.2.0` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
+| [`@techlocal/feedback-core`](packages/feedback-core/README.md) | `0.1.1` | Versioned submission/receipt contracts, visibility and routing policies, safe-state allowlists, and storage/reviewer/release interfaces. |
+| [`@techlocal/feedback-web`](packages/feedback-web/README.md) | `0.1.1` | Headless screenshot/file capture with privacy masking and bounded image compression. |
+| [`@techlocal/feedback-runner`](packages/feedback-runner/README.md) | `0.2.0` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
 
 Your application owns presentation, authentication, tenant isolation, private storage, reviewer access, database schema and release verification. Collection and review work without the runner. The core and web packages are framework-independent; the supplied runner adapters currently require macOS and a supported Codex CLI.
 
-The `@techlocal-accounts` scope identifies the existing packages and repository owner; it does not require an adopter to use a particular application or company setup. Package names and v1 report contracts are retained for compatibility.
+New npm distribution uses the `@techlocal` scope. Existing GitHub Packages under `@techlocal-accounts` remain available to current consumers. The exported API and v1 report contracts are unchanged; switching registries requires updating package names and imports, not migrating persisted reports.
 
 ## Getting started
 
@@ -38,22 +38,32 @@ A future breaking submission shape needs a new schema version/export; persisted 
 
 ## Package access
 
-Repository visibility and package access are separate. These manifests target public publication on GitHub Packages; existing package visibility must also be changed in GitHub package settings. GitHub requires an access token even to install public npm packages ([registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)). Public visibility is not anonymous installation. Source versions listed above are release candidates until registry publication is verified; see the [release checklist](docs/package-release.md).
+The three `@techlocal` packages target the public npm registry. Once the [release checklist](docs/package-release.md) confirms publication, applications can install the pinned versions without a registry credential:
 
-An application consuming the existing registry packages can use this `.npmrc` mapping:
+```sh
+npm install @techlocal/feedback-core@0.1.1 @techlocal/feedback-web@0.1.1
+# Optional local runner:
+npm install @techlocal/feedback-runner@0.2.0
+```
+
+Source versions remain release candidates until npm publication and anonymous installation are verified. Use `@techlocal/feedback-core`, `@techlocal/feedback-core/limits`, `@techlocal/feedback-web` and `@techlocal/feedback-runner` in imports. An existing `@techlocal-accounts` installation must update its dependencies and imports to adopt the npm distribution. Core/web `0.1.1` and runner `0.2.0` preserve the corresponding GitHub release APIs.
+
+### Existing GitHub Packages consumers
+
+The existing `@techlocal-accounts/feedback-*` packages and versions are retained. GitHub requires an access token even to install public npm packages ([registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)). Existing GitHub consumers can keep their package names, imports and registry mapping:
 
 ```ini
 @techlocal-accounts:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-Supply the read credential only through an authorized local secret store or install/build environment. Never commit its value or include it in browser/native bundles. Authorized GitHub Actions consumers can use a job's short-lived `GITHUB_TOKEN` with package-read permission. Pin available versions; changes in this checkout require maintainer-controlled release and adapter validation before registry adoption.
+Supply the read credential only through an authorized local secret store or install/build environment. Never commit its value or include it in browser/native bundles. Authorized GitHub Actions consumers can use a job's short-lived `GITHUB_TOKEN` with package-read permission. npm consumers do not need this mapping or credential.
 
 The workspace root remains `private: true` to prevent accidental root-package publication. Publish only the three scoped packages after their release checks; never publish the workspace root.
 
 ## Optional Vercel credential sync on macOS
 
-The helper requires an already linked Vercel project and an explicitly selected Keychain item:
+For applications retaining GitHub Packages, the helper requires an already linked Vercel project and an explicitly selected Keychain item:
 
 ```sh
 node scripts/sync-vercel-package-reader.mjs \
