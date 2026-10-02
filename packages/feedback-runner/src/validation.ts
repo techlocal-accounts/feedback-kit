@@ -7,7 +7,7 @@ import { runProcess } from "./process.js";
 import { assertFeedbackDependencyPaths, assertFeedbackPermissionConfiguration, createFeedbackPermissionConfig,
   feedbackDependencyPaths, inlineToml } from "./permissions.js";
 
-export interface ValidationCommand { argv: readonly [string, ...string[]]; timeoutMs?: number }
+export interface ValidationCommand { cwd?: string; argv: readonly [string, ...string[]]; timeoutMs?: number }
 
 function assertLockedInstall(command: ValidationCommand): void {
   const [executable, verb, ...flags] = command.argv;
@@ -26,6 +26,8 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
       command.timeoutMs !== undefined && (!Number.isFinite(command.timeoutMs) || command.timeoutMs < 1 || command.timeoutMs > 3_600_000)) {
     throw new Error("Invalid validation command");
   }
+  const commandCwd=command.cwd ? resolve(checkout.path,command.cwd) : checkout.path;
+  if(commandCwd!==checkout.path && !commandCwd.startsWith(checkout.path + "/")) throw new Error("Validation directory escapes checkout");
   let temporary: string | undefined;
   let dependencies: readonly string[] | undefined;
   try {
@@ -56,11 +58,11 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
       await mkdir(commandTmp, { recursive: true, mode: 0o700 });
       env = { ...env, CODEX_HOME: temporary, TMPDIR: commandTmp, BUN_INSTALL_CACHE_DIR: join(commandTmp, "bun-cache") };
       executable = sandboxExecutable;
-      args = ["sandbox", "--permission-profile", config.default_permissions, "--include-managed-config", "--cd", checkout.path,
+      args = ["sandbox", "--permission-profile", config.default_permissions, "--include-managed-config", "--cd", commandCwd,
         "-c", `permissions.${config.default_permissions}=${inlineToml(config.permissions[config.default_permissions])}`,
         ...command.argv];
     }
-    await runProcess({ executable, args, cwd: checkout.path, env,
+    await runProcess({ executable, args, cwd: commandCwd, env,
       signal, timeoutMs: command.timeoutMs ?? 600_000, stderrLimit: credentialed ? 0 : 4_000 });
     if (dependencies) assertFeedbackDependencyPaths(checkout.path, dependencies);
   } catch (error) {

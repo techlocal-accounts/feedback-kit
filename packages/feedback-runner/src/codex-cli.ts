@@ -48,7 +48,7 @@ async function isolatedCodexArguments(executable: string, cwd: string, env: Node
   const shellSet = `{${Object.entries(shellValues).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join(",")}}`;
   const disabledFeatures = ["apps", "hooks", "plugins", "remote_plugin", "shell_snapshot", "memories", "computer_use",
     "browser_use", "browser_use_external", "browser_use_full_cdp_access", "in_app_browser", "image_generation", "artifact",
-    "workspace_dependencies", "goals", "tool_suggest", "multi_agent", "code_mode", "code_mode_host", "code_mode_only",
+    "workspace_dependencies", "goals", "tool_suggest", "multi_agent", "code_mode", "code_mode_only",
     "request_permissions_tool"];
   return [
     "--ignore-user-config", "--ignore-rules", "--strict-config", ...disabledFeatures.flatMap(feature => ["--disable", feature]),
