@@ -1,0 +1,74 @@
+name: Publish reviewed packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/feedback-public-release]
+
+# Normal cleanup-branch pushes do not publish packages.
+permissions:
+  contents: read
+
+concurrency:
+  group: feedback-kit-package-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/codex/feedback-public-release'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+      - run: npm install --global pnpm@10.33.0 --ignore-scripts
+      - run: pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm build
+      - name: Pack and inspect only the three scoped packages
+        run: |
+          pnpm --filter './packages/*' pack --pack-destination release-tarballs
+          node scripts/check-package-contents.mjs release-tarballs
+          printf '%s\n' "$GITHUB_SHA" > release-tarballs/SOURCE_COMMIT
+          cd release-tarballs
+          shasum -a 256 *.tgz > SHA256SUMS
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: feedback-kit-release-${{ github.sha }}
+          path: release-tarballs/
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: feedback-kit-release-${{ github.sha }}
+          path: release-tarballs
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          registry-url: https://npm.pkg.github.com
+          scope: '@techlocal-accounts'
+      - name: Verify reviewed artifact identity and checksums
+        working-directory: release-tarballs
+        run: |
+          test "$(cat SOURCE_COMMIT)" = "$GITHUB_SHA"
+          sha256sum --check SHA256SUMS
+      - name: Publish audited core, web and runner tarballs
+        working-directory: release-tarballs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm publish ./techlocal-accounts-feedback-core-0.1.1.tgz --registry=https://npm.pkg.github.com --access=public --ignore-scripts
+          npm publish ./techlocal-accounts-feedback-web-0.1.1.tgz --registry=https://npm.pkg.github.com --access=public --ignore-scripts
+          npm publish ./techlocal-accounts-feedback-runner-0.2.0.tgz --registry=https://npm.pkg.github.com --access=public --ignore-scripts

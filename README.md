@@ -4,8 +4,8 @@ Composable TypeScript building blocks for collecting, reviewing and optionally a
 
 | Package | Source version | Purpose |
 | --- | --- | --- |
-| [`@techlocal-accounts/feedback-core`](packages/feedback-core/README.md) | `0.1.0` | Versioned submission/receipt contracts, visibility and routing policies, safe-state allowlists, and storage/reviewer/release interfaces. |
-| [`@techlocal-accounts/feedback-web`](packages/feedback-web/README.md) | `0.1.0` | Headless screenshot/file capture with privacy masking and bounded image compression. |
+| [`@techlocal-accounts/feedback-core`](packages/feedback-core/README.md) | `0.1.1` | Versioned submission/receipt contracts, visibility and routing policies, safe-state allowlists, and storage/reviewer/release interfaces. |
+| [`@techlocal-accounts/feedback-web`](packages/feedback-web/README.md) | `0.1.1` | Headless screenshot/file capture with privacy masking and bounded image compression. |
 | [`@techlocal-accounts/feedback-runner`](packages/feedback-runner/README.md) | `0.2.0` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
 
 Your application owns presentation, authentication, tenant isolation, private storage, reviewer access, database schema and release verification. Collection and review work without the runner. The core and web packages are framework-independent; the supplied runner adapters currently require macOS and a supported Codex CLI.
@@ -38,7 +38,7 @@ A future breaking submission shape needs a new schema version/export; persisted 
 
 ## Package access
 
-Repository visibility and package access are separate. Package manifests still target GitHub Packages with restricted access. Public source does not make registry downloads anonymous or grant permission to publish. Use authorized package access or build from this checkout; source versions listed above do not guarantee those versions are published.
+Repository visibility and package access are separate. These manifests target public publication on GitHub Packages; existing package visibility must also be changed in GitHub package settings. GitHub requires an access token even to install public npm packages ([registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)). Public visibility is not anonymous installation. Source versions listed above are release candidates until registry publication is verified; see the [release checklist](docs/package-release.md).
 
 An application consuming the existing registry packages can use this `.npmrc` mapping:
 
@@ -49,7 +49,7 @@ An application consuming the existing registry packages can use this `.npmrc` ma
 
 Supply the read credential only through an authorized local secret store or install/build environment. Never commit its value or include it in browser/native bundles. Authorized GitHub Actions consumers can use a job's short-lived `GITHUB_TOKEN` with package-read permission. Pin available versions; changes in this checkout require maintainer-controlled release and adapter validation before registry adoption.
 
-The workspace root remains `private: true` to prevent accidental root-package publication. Publishing the three packages is a separate maintainer action after checks and licensing decisions.
+The workspace root remains `private: true` to prevent accidental root-package publication. Publish only the three scoped packages after their release checks; never publish the workspace root.
 
 ## Optional Vercel credential sync on macOS
 
@@ -82,4 +82,4 @@ The test suite uses synthetic actors, reports and DOM fixtures. It does not esta
 
 ## Licensing
 
-This repository currently has no project license file or package license declaration. The owner must choose and add licensing terms before representing it as licensed for general reuse. Dependency licenses remain separate; preserve their required notices when distributing them.
+Project-owned code is licensed under the [MIT License](LICENSE), attributed to Tech Local (the verified repository owner/publisher) and contributors. Dependencies retain their own licenses and copyright notices; this project license does not replace their terms.

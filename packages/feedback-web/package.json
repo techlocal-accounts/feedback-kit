@@ -1,12 +1,13 @@
 {
   "name": "@techlocal-accounts/feedback-web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless web feedback capture with privacy masking and bounded image compression",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-web"},
+  "license": "MIT",
   "type": "module",
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "LICENSE"],
   "exports": {".": {"types": "./dist/index.d.ts", "default": "./dist/index.js"}},
   "scripts": {"build": "tsc -p tsconfig.build.json"},
-  "publishConfig": {"registry": "https://npm.pkg.github.com", "access": "restricted"},
+  "publishConfig": {"registry": "https://npm.pkg.github.com", "access": "public"},
   "dependencies": {"html2canvas-pro": "^2.4.0", "@techlocal-accounts/feedback-core": "workspace:*"}
 }
