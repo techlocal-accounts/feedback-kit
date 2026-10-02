@@ -83,8 +83,8 @@ export class LocalGitPublicationAdapter implements GitPublicationAdapter {
       if (!shaPattern.test(baseSha)) throw new Error("Invalid main commit");
       await git(path, "checkout", "--detach", baseSha);
       await git(path, "remote", "remove", "origin");
-      await git(path, "config", "user.name", this.input.authorName ?? "Tech Local Feedback");
-      await git(path, "config", "user.email", this.input.authorEmail ?? "accounts@techlocal.co.za");
+      await git(path, "config", "user.name", this.input.authorName ?? "Feedback Runner");
+      await git(path, "config", "user.email", this.input.authorEmail ?? "feedback-runner@example.invalid");
       await git(path, "config", "commit.gpgSign", "false");
       await git(path, "config", "core.hooksPath", "/dev/null");
       const gitDirectory = join(parent, "control.git");

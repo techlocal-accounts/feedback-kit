@@ -1,17 +1,18 @@
 {
-  "name": "techlocal-feedback-kit",
+  "name": "feedback-kit",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "test": "pnpm --filter @techlocal-accounts/feedback-core build && vitest run",
-    "typecheck": "pnpm --filter @techlocal-accounts/feedback-core build && tsc -p packages/feedback-core/tsconfig.json --noEmit && tsc -p packages/feedback-web/tsconfig.json --noEmit && tsc -p packages/feedback-runner/tsconfig.json --noEmit",
+    "typecheck": "pnpm --filter @techlocal-accounts/feedback-core build && tsc -p packages/feedback-core/tsconfig.json --noEmit && tsc -p packages/feedback-web/tsconfig.json --noEmit && tsc -p packages/feedback-runner/tsconfig.json --noEmit && tsc -p examples/tsconfig.json --noEmit",
     "build": "pnpm --filter @techlocal-accounts/feedback-core build && pnpm --filter @techlocal-accounts/feedback-web build && pnpm --filter @techlocal-accounts/feedback-runner build"
   },
   "devDependencies": {
     "jsdom": "^28.1.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"
-  }
+  },
+  "license": "MIT"
 }

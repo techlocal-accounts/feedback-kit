@@ -15,10 +15,14 @@ const project = argument('--project');
 const scope = argument('--scope');
 const environment = argument('--environment');
 const branch = argument('--branch');
+const keychainService = argument('--keychain-service');
+const keychainAccount = argument('--keychain-account');
 
 if (!project || !scope || !['production', 'preview', 'development'].includes(environment)
-  || (branch && environment !== 'preview')) {
-  console.error('Usage: sync-vercel-package-reader --root <linked repo> --project <name> --scope <team> --environment <production|preview|development> [--branch <preview branch>]');
+  || (branch && environment !== 'preview')
+  || !keychainService?.trim() || !keychainAccount?.trim()
+  || keychainService.startsWith('--') || keychainAccount.startsWith('--')) {
+  console.error('Usage: sync-vercel-package-reader --root <linked repo> --project <name> --scope <team> --environment <production|preview|development> --keychain-service <service> --keychain-account <account> [--branch <preview branch>]');
   process.exit(2);
 }
 
@@ -44,8 +48,8 @@ if (link.projectName !== project || !/^prj_[A-Za-z0-9]+$/.test(link.projectId ??
 let token;
 try {
   token = execFileSync('security', [
-    'find-generic-password', '-w', '-s', 'techlocal-feedback-kit-read',
-    '-a', 'techlocal-accounts',
+    'find-generic-password', '-w', '-s', keychainService,
+    '-a', keychainAccount,
   ], { encoding: 'utf8' }).trim();
 } catch {
   console.error('The approved package reader is unavailable in Keychain.');

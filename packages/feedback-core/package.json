@@ -1,12 +1,13 @@
 {
   "name": "@techlocal-accounts/feedback-core",
-  "version": "0.1.0",
-  "description": "Versioned feedback contract and policies for Tech Local apps",
+  "version": "0.1.1",
+  "description": "Versioned feedback contracts, submission policies and application adapter interfaces",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-core"},
+  "license": "MIT",
   "type": "module",
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "LICENSE"],
   "exports": {".": {"types": "./dist/index.d.ts", "default": "./dist/index.js"}, "./limits": {"types": "./dist/limits.d.ts", "default": "./dist/limits.js"}},
   "scripts": {"build": "tsc -p tsconfig.build.json"},
-  "publishConfig": {"registry": "https://npm.pkg.github.com", "access": "restricted"},
+  "publishConfig": {"registry": "https://npm.pkg.github.com", "access": "public"},
   "dependencies": {"zod": "^4.3.6"}
 }

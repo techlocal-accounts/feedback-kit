@@ -253,6 +253,7 @@ describe("synthetic Git publication", () => {
       expect((await adapter.inspect(checkout)).headSha).toBe(checkout.baseSha);
       const inspected = await adapter.snapshot(checkout, claim);
       expect(inspected.changedPaths).toEqual(["README.md"]);
+      expect(run(checkout.path, "log", "-1", "--format=%an <%ae>")).toBe("Feedback Runner <feedback-runner@example.invalid>");
       const guard = { signal: new AbortController().signal, assertLease: vi.fn(async () => undefined) };
       await adapter.publish(checkout, inspected.headSha, guard);
       expect(guard.assertLease).toHaveBeenCalledOnce();

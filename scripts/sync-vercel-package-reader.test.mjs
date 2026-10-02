@@ -15,7 +15,8 @@ function fixture() {
   writeFileSync(join(root, '.vercel', 'project.json'), JSON.stringify({
     projectId: 'prj_test123', orgId: 'team_test123', projectName: 'pilot',
   }));
-  writeFileSync(join(binaries, 'security'), `#!/bin/sh\nprintf '%s\\n' '${token}'\n`, { mode: 0o755 });
+  const keychainArgs = join(root, 'keychain-args');
+  writeFileSync(join(binaries, 'security'), `#!/bin/sh\nprintf '%s\\n' "$@" > '${keychainArgs}'\nprintf '%s\\n' '${token}'\n`, { mode: 0o755 });
   writeFileSync(join(binaries, 'vercel'), `#!/usr/bin/env node
 const fs = require('node:fs');
 const args = process.argv.slice(2);
@@ -33,17 +34,21 @@ else process.exit(2);
     cwd: root, encoding: 'utf8',
     env: { ...process.env, ...environment, PATH: `${binaries}:${process.env.PATH}`, MOCK_VERCEL_STATE: state },
   });
-  return { root, state, run, close: () => rmSync(root, { recursive: true, force: true }) };
+  const selectedReader = ['--keychain-service', 'example-feedback-reader', '--keychain-account', 'example-registry-user'];
+  return { root, state, keychainArgs, run, selectedReader, close: () => rmSync(root, { recursive: true, force: true }) };
 }
 
 test('copies the exact newline-free reader into the linked preview project', () => {
   const f = fixture();
   try {
-    const result = f.run();
+    const result = f.run(f.selectedReader);
     expect(result.status).toBe(0);
     expect(readFileSync(f.state, 'utf8')).toBe(token);
     expect(result.stdout).toContain('Verified package reader for pilot');
     expect(result.stdout + result.stderr).not.toContain(token);
+    expect(readFileSync(f.keychainArgs, 'utf8').split('\n')).toEqual([
+      'find-generic-password', '-w', '-s', 'example-feedback-reader', '-a', 'example-registry-user', '',
+    ]);
   } finally { f.close(); }
 });
 
@@ -53,7 +58,7 @@ test('refuses a mismatched linked project before touching Vercel', () => {
     writeFileSync(join(f.root, '.vercel', 'project.json'), JSON.stringify({
       projectId: 'prj_test123', orgId: 'team_test123', projectName: 'someone-else',
     }));
-    const result = f.run();
+    const result = f.run(f.selectedReader);
     expect(result.status).toBe(2);
     expect(result.stderr).toContain('does not match');
     expect(() => readFileSync(f.state)).toThrow();
@@ -63,9 +68,22 @@ test('refuses a mismatched linked project before touching Vercel', () => {
 test('fails closed when Vercel returns a different saved value', () => {
   const f = fixture();
   try {
-    const result = f.run([], { MOCK_STALE: '1' });
+    const result = f.run(f.selectedReader, { MOCK_STALE: '1' });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('could not be verified');
     expect(result.stdout + result.stderr).not.toContain(token);
+  } finally { f.close(); }
+});
+
+test('requires an explicit Keychain service and account before reading credentials', () => {
+  const f = fixture();
+  try {
+    for (const args of [[], ['--keychain-service', 'example-feedback-reader'], ['--keychain-account', 'example-registry-user']]) {
+      const result = f.run(args);
+      expect(result.status).toBe(2);
+      expect(result.stderr).toContain('--keychain-service');
+      expect(() => readFileSync(f.keychainArgs)).toThrow();
+      expect(() => readFileSync(f.state)).toThrow();
+    }
   } finally { f.close(); }
 });
