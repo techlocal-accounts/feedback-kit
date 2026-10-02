@@ -18,9 +18,9 @@ function fixture(change = () => {}) {
     mkdirSync(source, {recursive: true});
     mkdirSync(join(stage, 'dist'), {recursive: true});
     const manifest = {
-      name: `@techlocal-accounts/${name}`, version: '0.1.1', license: 'MIT',
-      publishConfig: {registry: 'https://npm.pkg.github.com', access: 'public'},
-      ...(name === 'feedback-core' ? {} : {dependencies: {'@techlocal-accounts/feedback-core': '0.1.1'}}),
+      name: `@techlocal/${name}`, version: '0.1.1', license: 'MIT',
+      publishConfig: {registry: 'https://registry.npmjs.org', access: 'public'},
+      ...(name === 'feedback-core' ? {} : {dependencies: {'@techlocal/feedback-core': '0.1.1'}}),
     };
     writeFileSync(join(source, 'package.json'), JSON.stringify(manifest));
     writeFileSync(join(stage, 'package.json'), JSON.stringify(manifest));
@@ -46,15 +46,19 @@ test('checks the packaged licenses and rewritten dependency versions', () => {
   } finally { f.close(); }
 });
 
-test.each(['license', 'workspace', 'credential', 'unexpected'])('refuses %s without printing source or credentials', failure => {
+test.each(['license', 'workspace', 'credential', 'unexpected', 'registry'])('refuses %s without printing source or credentials', failure => {
   const fakeToken = `ghp_${'z'.repeat(36)}`;
   const change = (stage, name, manifest) => {
     if (failure === 'license' && name === 'feedback-core') writeFileSync(join(stage, 'LICENSE'), 'wrong license');
     if (failure === 'workspace' && name === 'feedback-web') {
-      manifest.dependencies['@techlocal-accounts/feedback-core'] = 'workspace:*';
+      manifest.dependencies['@techlocal/feedback-core'] = 'workspace:*';
       writeFileSync(join(stage, 'package.json'), JSON.stringify(manifest));
     }
     if (failure === 'credential' && name === 'feedback-core') writeFileSync(join(stage, 'dist/index.js'), fakeToken);
+    if (failure === 'registry' && name === 'feedback-core') {
+      manifest.publishConfig.registry = 'https://npm.pkg.github.com';
+      writeFileSync(join(stage, 'package.json'), JSON.stringify(manifest));
+    }
     if (failure === 'unexpected' && name === 'feedback-core') writeFileSync(join(stage, '.env'), 'synthetic private file');
   };
   change.extra = failure === 'unexpected';

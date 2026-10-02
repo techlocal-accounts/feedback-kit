@@ -1,11 +1,12 @@
-name: Publish reviewed packages
+name: Legacy GitHub package release
 
 on:
   workflow_dispatch:
   push:
     branches: [codex/feedback-public-release]
 
-# Normal cleanup-branch pushes do not publish packages.
+# Retain the legacy GitHub distribution only at its reviewed source commit.
+# New @techlocal npm releases are prepared separately; never push them to this branch.
 permissions:
   contents: read
 
@@ -15,7 +16,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.ref == 'refs/heads/codex/feedback-public-release'
+    if: github.ref == 'refs/heads/codex/feedback-public-release' && github.sha == '8d5f9d26be181c4b9b7c00b4055bc193eb91d39e'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

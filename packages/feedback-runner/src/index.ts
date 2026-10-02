@@ -1,4 +1,4 @@
-import type { ReleaseIdentity, VerifiedDelivery } from "@techlocal-accounts/feedback-core";
+import type { ReleaseIdentity, VerifiedDelivery } from "@techlocal/feedback-core";
 export { PersistentCodexTaskAdapter } from "./codex-persistent.js";
 export { LocalCodexTaskAdapter } from "./codex-cli.js";
 export { LocalGitPublicationAdapter } from "./local-git.js";

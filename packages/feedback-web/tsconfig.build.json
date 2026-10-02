@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
-    "paths": {"@techlocal-accounts/feedback-core": ["../feedback-core/dist/index.d.ts"]}
+    "paths": {"@techlocal/feedback-core": ["../feedback-core/dist/index.d.ts"]}
   },
   "exclude": ["src/**/*.test.ts"]
 }

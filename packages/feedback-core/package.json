@@ -1,5 +1,5 @@
 {
-  "name": "@techlocal-accounts/feedback-core",
+  "name": "@techlocal/feedback-core",
   "version": "0.1.1",
   "description": "Versioned feedback contracts, submission policies and application adapter interfaces",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-core"},
@@ -8,6 +8,6 @@
   "files": ["dist", "README.md", "LICENSE"],
   "exports": {".": {"types": "./dist/index.d.ts", "default": "./dist/index.js"}, "./limits": {"types": "./dist/limits.d.ts", "default": "./dist/limits.js"}},
   "scripts": {"build": "tsc -p tsconfig.build.json"},
-  "publishConfig": {"registry": "https://npm.pkg.github.com", "access": "public"},
+  "publishConfig": {"registry": "https://registry.npmjs.org", "access": "public"},
   "dependencies": {"zod": "^4.3.6"}
 }
