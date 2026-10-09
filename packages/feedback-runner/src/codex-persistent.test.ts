@@ -23,7 +23,7 @@ async function fixture(mode: 'complete'|'budget') {
  await writeFile(join(checkout.path,'.git'),`gitdir: ${join(root,'control.git')}\n`);
  const marker=join(root,'receipt');const executable=join(root,'codex-fixture');
  await writeFile(executable,`#!/usr/bin/env node
-const fs=require('fs');
+const fs=require('fs');fs.writeFileSync(${JSON.stringify(join(root,'cli-args.json'))},JSON.stringify(process.argv.slice(2)));
 if(process.argv.includes('--version')){process.stdout.write('codex-cli 0.162.0');process.exit(0)}
 if(process.argv.includes('mcp')){process.stdout.write('[]');process.exit(0)}
 const send=o=>process.stdout.write(JSON.stringify(o)+'\\n');let buffer='';
@@ -50,6 +50,7 @@ it('persists the thread before starting a turn and handles streamed final items'
   onThread:async(_role,id)=>{await writeFile(f.marker,id);},onUsage:async n=>{usage.push(n);}});
  await adapter.implement({claim,checkout:f.checkout,signal:new AbortController().signal});
  expect(JSON.parse(await readFile(join(f.root,'model-params.json'),'utf8'))).toMatchObject({model:'gpt-6.1-sol',config:{model_reasoning_effort:'high'}});
+ expect(JSON.parse(await readFile(join(f.root,'cli-args.json'),'utf8'))).toContain('features.code_mode_host=true');
  expect(await readFile(f.marker,'utf8')).toBe('saved-thread');expect(usage.at(-1)).toBe(100);
  }finally{await rm(f.root,{recursive:true,force:true});}
 });

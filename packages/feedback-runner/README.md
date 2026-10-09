@@ -61,3 +61,5 @@ Both Codex adapters explicitly default to `gpt-6.1-sol` with `high` reasoning. S
 For a scheduled app-owned controller, launch through a plain Node entrypoint that checks its locked dependencies before starting the TypeScript worker. Restore missing dependencies only in the trusted parent with a frozen, script-disabled install and the existing package reader. Keep installer credentials out of model and validation processes. Empty healthy polls do not install or start models.
 
 Sol 6.1/Luna adapters require Codex CLI 0.162.0 or newer; older subscription clients do not advertise these models. Review responses use explicit JSON instructions and strict parent-side shape validation instead of the CLI `--output-schema` transport, which returned incomplete streams during live recovery. Update the existing CLI; no replacement API credential is required.
+
+The stable `code_mode_host` transport remains enabled for ordinary sandboxed execution. Optional code mode, inherited integrations and unapproved tools stay disabled; the named filesystem and network profile still governs commands.

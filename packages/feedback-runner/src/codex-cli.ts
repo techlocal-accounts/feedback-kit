@@ -49,7 +49,7 @@ async function isolatedCodexArguments(executable: string, cwd: string, env: Node
     "request_permissions_tool"];
   return [
     "--ignore-user-config", "--ignore-rules", "--strict-config", ...disabledFeatures.flatMap(feature => ["--disable", feature]),
-    "-c", "approval_policy=\"never\"", "-c", "web_search=\"disabled\"",
+    "-c", "features.code_mode_host=true", "-c", "approval_policy=\"never\"", "-c", "web_search=\"disabled\"",
     "-c", "allow_login_shell=false",
     "-c", "shell_environment_policy.inherit=\"none\"", "-c", "shell_environment_policy.experimental_use_profile=false",
     "-c", `shell_environment_policy.set=${shellSet}`,

@@ -53,7 +53,7 @@ export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
     if(!Array.isArray(servers)||!servers.every(s=>s && typeof s.name==='string' && /^[A-Za-z0-9_.-]{1,100}$/.test(s.name))) throw new Error('Cannot verify disabled integrations');
     const args=['app-server','--strict-config',...disabledFeatures.flatMap(f=>['--disable',f]),
       ...servers.flatMap(s=>['-c',`mcp_servers.${JSON.stringify(s.name)}.enabled=false`]),
-      '-c','approval_policy="never"','-c','web_search="disabled"','-c','allow_login_shell=false',
+      '-c','features.code_mode_host=true','-c','approval_policy="never"','-c','web_search="disabled"','-c','allow_login_shell=false',
       '-c','shell_environment_policy.inherit="none"','-c','shell_environment_policy.experimental_use_profile=false',
       '-c',`shell_environment_policy.set=${inlineToml(shell)}`,
       '-c',`default_permissions=${inlineToml(permissions.default_permissions)}`,

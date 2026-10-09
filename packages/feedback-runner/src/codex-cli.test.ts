@@ -34,7 +34,7 @@ describe("isolated Codex process", () => {
         expect(result.startup).toBeUndefined();
         expect(result.node).toBeUndefined();
         expect(result.args).toEqual(expect.arrayContaining([
-          "--model", "gpt-6.1-sol", 'model_reasoning_effort="high"',
+          "--model", "gpt-6.1-sol", 'model_reasoning_effort="high"', "features.code_mode_host=true",
           "--ignore-user-config", "--ignore-rules", "--strict-config", "apps", "hooks", "remote_plugin", "shell_snapshot",
           "approval_policy=\"never\"", "allow_login_shell=false", "shell_environment_policy.inherit=\"none\"",
           "plugins", "computer_use", "browser_use", "in_app_browser", "image_generation", "workspace_dependencies", "multi_agent",
