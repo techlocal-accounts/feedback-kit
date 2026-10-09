@@ -53,3 +53,9 @@ paths, a per-project daily budget, source opt-in and one job per issue episode.
 The host application supplies the queue adapter, operational runbook, budget persistence and PR
 callback. It can provide both feedback and incident queue adapters without adding a separate
 incident-reporting interface to the feedback UI.
+
+## Model selection
+
+Both Codex adapters explicitly default to `gpt-6.1-sol` with `high` reasoning. Set trusted `executionSettings: { model, reasoningEffort }` on either adapter to override this. Saved `gpt-6-sol` choices upgrade to Sol 6.1 without changing reasoning; explicit Luna and Astra choices are preserved. Report content cannot select models.
+
+For a scheduled app-owned controller, launch through a plain Node entrypoint that checks its locked dependencies before starting the TypeScript worker. Restore missing dependencies only in the trusted parent with a frozen, script-disabled install and the existing package reader. Keep installer credentials out of model and validation processes. Empty healthy polls do not install or start models.

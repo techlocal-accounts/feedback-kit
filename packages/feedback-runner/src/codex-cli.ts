@@ -1,3 +1,4 @@
+import { resolveCodexExecutionSettings, type CodexExecutionSettings } from "./execution-settings.js";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
@@ -62,7 +63,7 @@ async function isolatedCodexArguments(executable: string, cwd: string, env: Node
 
 async function codexExec(input: {
   cwd: string; prompt: string; mode: "workspace-write" | "read-only";
-  signal: AbortSignal; outputSchema?: string; executable: string; readOnlyPaths?: readonly string[];
+  signal: AbortSignal; outputSchema?: string; executable: string; readOnlyPaths?: readonly string[]; executionSettings?: CodexExecutionSettings;
 }): Promise<string> {
   const temporary = await mkdtemp(join(tmpdir(), "feedback-codex-"));
   const outputPath = join(temporary, "result.txt");
@@ -86,7 +87,8 @@ async function codexExec(input: {
       access: input.mode === "workspace-write" ? "write" : "read", readOnlyPaths });
     const dependencies = feedbackDependencyPaths(input.cwd);
     const isolation = await isolatedCodexArguments(input.executable, input.cwd, env, input.signal);
-    const args = ["exec", ...isolation, "-c", `default_permissions=${inlineToml(permissionConfig.default_permissions)}`,
+    const settings = resolveCodexExecutionSettings(input.executionSettings);
+    const args = ["exec", "--model", settings.model, "-c", `model_reasoning_effort=${JSON.stringify(settings.reasoningEffort)}`, ...isolation, "-c", `default_permissions=${inlineToml(permissionConfig.default_permissions)}`,
       "-c", `permissions.${permissionConfig.default_permissions}=${inlineToml(permissionConfig.permissions[permissionConfig.default_permissions])}`,
       "--ephemeral", "--cd", input.cwd,
       "--output-last-message", outputPath];
@@ -108,7 +110,7 @@ function boundedTask(claim: FencedClaim): string {
 
 /** Each implement/review call is a separate, ephemeral Codex process. */
 export class LocalCodexTaskAdapter implements CodexTaskAdapter {
-  constructor(private readonly input: { executable?: string; readOnlyPaths?: readonly string[] } = {}) {}
+  constructor(private readonly input: { executable?: string; readOnlyPaths?: readonly string[]; executionSettings?: CodexExecutionSettings } = {}) {}
 
   async implement(input: { claim: FencedClaim; checkout: IsolatedCheckout; signal: AbortSignal }): Promise<void> {
     const task = boundedTask(input.claim);
@@ -123,7 +125,7 @@ export class LocalCodexTaskAdapter implements CodexTaskAdapter {
       "<untrusted-report>", task, "</untrusted-report>",
     ].join("\n");
     await codexExec({ cwd: input.checkout.path, prompt, mode: "workspace-write", signal: input.signal,
-      executable: this.input.executable ?? "codex", readOnlyPaths: this.input.readOnlyPaths });
+      executable: this.input.executable ?? "codex", readOnlyPaths: this.input.readOnlyPaths, executionSettings: this.input.executionSettings });
   }
 
   async review(input: { claim: FencedClaim; checkout: IsolatedCheckout; changedPaths: string[]; signal: AbortSignal }): Promise<{
@@ -144,7 +146,7 @@ export class LocalCodexTaskAdapter implements CodexTaskAdapter {
         "Return a JSON object matching the schema. Include a short public releaseNote if approved.",
       ].join("\n");
       const output = await codexExec({ cwd: input.checkout.path, prompt, mode: "read-only",
-        signal: input.signal, outputSchema: schemaPath, executable: this.input.executable ?? "codex", readOnlyPaths: this.input.readOnlyPaths });
+        signal: input.signal, outputSchema: schemaPath, executable: this.input.executable ?? "codex", readOnlyPaths: this.input.readOnlyPaths, executionSettings: this.input.executionSettings });
       const parsed: unknown = JSON.parse(output);
       if (!parsed || typeof parsed !== "object") throw new Error("Invalid independent review");
       const result = parsed as Record<string, unknown>;

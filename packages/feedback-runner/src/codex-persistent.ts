@@ -1,3 +1,4 @@
+import { resolveCodexExecutionSettings, type CodexExecutionSettings } from "./execution-settings.js";
 import { spawn } from 'node:child_process';
 import { mkdir, readFile, realpath } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -22,7 +23,7 @@ export function usageTotal(message: unknown): number | null {
 export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
   private used=0;
   constructor(private readonly input: {
-    executable: string; codexHome: string; tokenBudget: number;
+    executable: string; codexHome: string; tokenBudget: number; executionSettings?: CodexExecutionSettings;
     onThread(role: 'implementer'|'reviewer', id: string): Promise<void>;
     onUsage(total: number): Promise<void>;
   }) {
@@ -31,6 +32,7 @@ export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
   private async execute(claim: FencedClaim, checkout: IsolatedCheckout, signal: AbortSignal,
     role: 'implementer'|'reviewer', prompt: string): Promise<string> {
     await assertFeedbackPermissionConfiguration(checkout.path);
+    const settings=resolveCodexExecutionSettings(this.input.executionSettings);
     const home=await realpath(this.input.codexHome);
     if (home===join(homedir(),'.codex') || home===homedir()) throw new Error('A dedicated runner config home is required');
     const config=await readFile(join(home,'config.toml'),'utf8');
@@ -107,7 +109,7 @@ export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
       void(async()=>{
         await request('initialize',{clientInfo:{name:'feedback-kit-runner',version:'0.2.0'},capabilities:{experimentalApi:true}});
         send({method:'initialized',params:{}});
-        const started=await request('thread/start',{cwd:checkout.path,approvalPolicy:'never',ephemeral:false}) as {thread:{id:string}};
+        const started=await request('thread/start',{cwd:checkout.path,model:settings.model,modelProvider:'openai',allowProviderModelFallback:false,config:{model_reasoning_effort:settings.reasoningEffort},approvalPolicy:'never',ephemeral:false}) as {thread:{id:string}};
         threadId=started.thread.id;
         // Persist the chat before starting its first model turn. Ambiguous creation never auto-retries.
         await this.input.onThread(role,threadId);

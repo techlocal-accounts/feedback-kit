@@ -213,3 +213,5 @@ export async function verifyImplementedFeedback(config: LocalFeedbackRunnerConfi
   await config.queue.markAvailable(reportId, commitSha, delivery);
   return true;
 }
+
+export { resolveCodexExecutionSettings, type CodexExecutionSettings } from "./execution-settings.js";

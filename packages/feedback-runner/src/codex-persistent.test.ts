@@ -28,7 +28,7 @@ if(process.argv.includes('mcp')){process.stdout.write('[]');process.exit(0)}
 const send=o=>process.stdout.write(JSON.stringify(o)+'\\n');let buffer='';
 process.stdin.on('data',chunk=>{buffer+=chunk;let lines=buffer.split('\\n');buffer=lines.pop();for(const l of lines){const m=JSON.parse(l);
  if(!m.id)continue;
- if(m.method==='thread/start'){send({id:m.id,result:{thread:{id:'saved-thread'}}});continue;}
+ if(m.method==='thread/start'){fs.writeFileSync(${JSON.stringify(join(root,'model-params.json'))},JSON.stringify(m.params));send({id:m.id,result:{thread:{id:'saved-thread'}}});continue;}
  if(m.method==='turn/start'){
   if(!fs.existsSync(${JSON.stringify(marker)})){send({id:m.id,error:{message:'Receipt missing'}});continue;}
   send({id:m.id,result:{}});
@@ -48,6 +48,7 @@ it('persists the thread before starting a turn and handles streamed final items'
  const adapter=new PersistentCodexTaskAdapter({executable:f.executable,codexHome:f.home,tokenBudget:500,
   onThread:async(_role,id)=>{await writeFile(f.marker,id);},onUsage:async n=>{usage.push(n);}});
  await adapter.implement({claim,checkout:f.checkout,signal:new AbortController().signal});
+ expect(JSON.parse(await readFile(join(f.root,'model-params.json'),'utf8'))).toMatchObject({model:'gpt-6.1-sol',config:{model_reasoning_effort:'high'}});
  expect(await readFile(f.marker,'utf8')).toBe('saved-thread');expect(usage.at(-1)).toBe(100);
  }finally{await rm(f.root,{recursive:true,force:true});}
 });
