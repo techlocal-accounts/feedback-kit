@@ -24,6 +24,7 @@ async function fixture(mode: 'complete'|'budget') {
  const marker=join(root,'receipt');const executable=join(root,'codex-fixture');
  await writeFile(executable,`#!/usr/bin/env node
 const fs=require('fs');
+if(process.argv.includes('--version')){process.stdout.write('codex-cli 0.162.0');process.exit(0)}
 if(process.argv.includes('mcp')){process.stdout.write('[]');process.exit(0)}
 const send=o=>process.stdout.write(JSON.stringify(o)+'\\n');let buffer='';
 process.stdin.on('data',chunk=>{buffer+=chunk;let lines=buffer.split('\\n');buffer=lines.pop();for(const l of lines){const m=JSON.parse(l);

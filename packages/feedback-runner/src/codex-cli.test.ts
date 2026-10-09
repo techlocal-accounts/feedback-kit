@@ -17,7 +17,7 @@ describe("isolated Codex process", () => {
     const root = await mkdtemp(join(tmpdir(), "feedback-codex-test-"));
     try {
       const executable = join(root, "codex-fixture");
-      await writeFile(executable, `#!${process.execPath}\nconst fs=require('fs');const args=process.argv.slice(2);if(args[0]==='--version'){process.stdout.write('codex-cli 0.144.6');}else if(args[0]==='mcp'){process.stdout.write(JSON.stringify([{name:'global-database',env:{TOKEN:'inventory-secret'}},{name:'project.server'}]));}else{let prompt='';process.stdin.on('data',d=>prompt+=d);process.stdin.on('end',()=>{const file=args[args.indexOf('--output-last-message')+1];const mode=args.some(arg=>arg.includes('feedback_write_'))?'workspace-write':'read-only';fs.writeFileSync(mode+'.json',JSON.stringify({args,prompt,token:process.env.NODE_AUTH_TOKEN,database:process.env.DATABASE_URL,startup:process.env.BASH_ENV,node:process.env.NODE_OPTIONS}));fs.writeFileSync(file,mode==='read-only'?JSON.stringify({approved:true,reason:'Synthetic review',releaseNote:'Saving works again.'}):'Prepared');});}\n`);
+      await writeFile(executable, `#!${process.execPath}\nconst fs=require('fs');const args=process.argv.slice(2);if(args[0]==='--version'){process.stdout.write('codex-cli 0.162.0');}else if(args[0]==='mcp'){process.stdout.write(JSON.stringify([{name:'global-database',env:{TOKEN:'inventory-secret'}},{name:'project.server'}]));}else{let prompt='';process.stdin.on('data',d=>prompt+=d);process.stdin.on('end',()=>{const file=args[args.indexOf('--output-last-message')+1];const mode=args.some(arg=>arg.includes('feedback_write_'))?'workspace-write':'read-only';fs.writeFileSync(mode+'.json',JSON.stringify({args,prompt,token:process.env.NODE_AUTH_TOKEN,database:process.env.DATABASE_URL,startup:process.env.BASH_ENV,node:process.env.NODE_OPTIONS}));fs.writeFileSync(file,mode==='read-only'?JSON.stringify({approved:true,reason:'Synthetic review',releaseNote:'Saving works again.'}):'Prepared');});}\n`);
       await chmod(executable, 0o700);
       vi.stubEnv("NODE_AUTH_TOKEN", "synthetic-package-token");
       vi.stubEnv("DATABASE_URL", "synthetic-private-database");
@@ -40,6 +40,7 @@ describe("isolated Codex process", () => {
           "plugins", "computer_use", "browser_use", "in_app_browser", "image_generation", "workspace_dependencies", "multi_agent",
           "mcp_servers.\"global-database\".enabled=false", "mcp_servers.\"project.server\".enabled=false",
         ]));
+        expect(result.args).not.toContain("--output-schema");
         expect(result.args).not.toContain("--sandbox");
         expect(JSON.stringify(result.args)).toContain(":minimal");
         expect(JSON.stringify(result.args)).toContain("deny");
@@ -55,7 +56,7 @@ describe("isolated Codex process", () => {
     const root = await mkdtemp(join(tmpdir(), "feedback-codex-inventory-fail-"));
     try {
       const executable = join(root, "codex-fixture");
-      await writeFile(executable, `#!${process.execPath}\nif(process.argv[2]==='--version'){process.stdout.write('codex-cli 0.144.6');}else if(process.argv[2]==='mcp'){process.stdout.write('invalid inventory');}else{require('fs').writeFileSync('model-started','yes');}\n`);
+      await writeFile(executable, `#!${process.execPath}\nif(process.argv[2]==='--version'){process.stdout.write('codex-cli 0.162.0');}else if(process.argv[2]==='mcp'){process.stdout.write('invalid inventory');}else{require('fs').writeFileSync('model-started','yes');}\n`);
       await chmod(executable, 0o700);
       const adapter = new LocalCodexTaskAdapter({ executable });
       await expect(adapter.implement({ claim, checkout: { path: root, baseSha: "a".repeat(40) }, signal: new AbortController().signal }))
@@ -68,7 +69,7 @@ describe("isolated Codex process", () => {
     const root = await mkdtemp(join(tmpdir(), "feedback-codex-version-fail-"));
     try {
       const executable = join(root, "codex-fixture");
-      await writeFile(executable, `#!${process.execPath}\nif(process.argv[2]==='--version'){process.stdout.write('codex-cli 0.137.0');}else{require('fs').writeFileSync('model-started','yes');}\n`);
+      await writeFile(executable, `#!${process.execPath}\nif(process.argv[2]==='--version'){process.stdout.write('codex-cli 0.154.0');}else{require('fs').writeFileSync('model-started','yes');}\n`);
       await chmod(executable, 0o700);
       await expect(new LocalCodexTaskAdapter({ executable }).implement({ claim,
         checkout: { path: root, baseSha: "a".repeat(40) }, signal: new AbortController().signal }))
@@ -81,11 +82,22 @@ describe("isolated Codex process", () => {
     const root = await mkdtemp(join(tmpdir(), "feedback-codex-spoofed-deps-"));
     try {
       const executable = join(root, "codex-fixture");
-      await writeFile(executable, `#!${process.execPath}\nconst fs=require('fs'),args=process.argv.slice(2);if(args[0]==='--version'){process.stdout.write('codex-cli 0.144.6');}else if(args[0]==='mcp'){process.stdout.write('[]');}else{fs.mkdirSync('ignored-app/node_modules',{recursive:true});fs.writeFileSync(args[args.indexOf('--output-last-message')+1],'Prepared');}\n`);
+      await writeFile(executable, `#!${process.execPath}\nconst fs=require('fs'),args=process.argv.slice(2);if(args[0]==='--version'){process.stdout.write('codex-cli 0.162.0');}else if(args[0]==='mcp'){process.stdout.write('[]');}else{fs.mkdirSync('ignored-app/node_modules',{recursive:true});fs.writeFileSync(args[args.indexOf('--output-last-message')+1],'Prepared');}\n`);
       await chmod(executable, 0o700);
       await expect(new LocalCodexTaskAdapter({ executable }).implement({ claim,
         checkout: { path: root, baseSha: "a".repeat(40) }, signal: new AbortController().signal }))
         .rejects.toThrow("changed isolated dependency directories");
     } finally { await rm(root, { recursive: true, force: true }); }
   });
+});
+
+
+it.each([null, [], {approved: true, reason: "missing release note"}, {approved: true, reason: "extra key", releaseNote: "Fix", unexpected: true}])("rejects malformed or extra review fields: %j", async (review) => {
+  const root = await mkdtemp(join(tmpdir(), "feedback-review-shape-"));
+  try {
+    const executable = join(root, "codex-fixture");
+    await writeFile(executable, `#!${process.execPath}\nconst fs=require('fs'),args=process.argv.slice(2);if(args[0]==='--version'){process.stdout.write('codex-cli 0.162.0');}else if(args[0]==='mcp'){process.stdout.write('[]');}else{process.stdin.resume();process.stdin.on('end',()=>fs.writeFileSync(args[args.indexOf('--output-last-message')+1],${JSON.stringify(JSON.stringify(review))}));}\n`);
+    await chmod(executable,0o700);
+    await expect(new LocalCodexTaskAdapter({executable}).review({claim,checkout:{path:root,baseSha:'a'.repeat(40)},changedPaths:['save.ts'],signal:new AbortController().signal})).rejects.toThrow("Invalid independent review");
+  } finally {await rm(root,{recursive:true,force:true});}
 });

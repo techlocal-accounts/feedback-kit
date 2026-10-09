@@ -1,4 +1,4 @@
-import { resolveCodexExecutionSettings, type CodexExecutionSettings } from "./execution-settings.js";
+import { assertCodexModelCliVersion, resolveCodexExecutionSettings, type CodexExecutionSettings } from "./execution-settings.js";
 import { spawn } from 'node:child_process';
 import { mkdir, readFile, realpath } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -45,6 +45,8 @@ export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
     const dependencies=feedbackDependencyPaths(checkout.path);
     const tmp=join(checkout.path,'.feedback-runner-tmp');await mkdir(tmp,{recursive:true,mode:0o700});
     const shell={...runtimeEnvironment(),TMPDIR:tmp,GIT_CONFIG_GLOBAL:'/dev/null',GIT_CONFIG_NOSYSTEM:'1',GIT_OPTIONAL_LOCKS:'0'};
+    const version=await runProcess({executable:this.input.executable,args:['--version'],cwd:checkout.path,env:{...shell,CODEX_HOME:home},signal,timeoutMs:30000,stdoutLimit:500});
+    assertCodexModelCliVersion(version.stdout);
     const inventory=await runProcess({executable:this.input.executable,args:['mcp','list','--json'],
       cwd:checkout.path,env:{...shell,CODEX_HOME:home},signal,timeoutMs:30000,stdoutLimit:1_000_000});
     const servers: unknown=JSON.parse(inventory.stdout);
