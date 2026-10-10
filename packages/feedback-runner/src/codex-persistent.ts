@@ -18,6 +18,10 @@ export function usageTotal(message: unknown): number | null {
   return m?.method==='thread/tokenUsage/updated' && Number.isSafeInteger(count) && count! >= 0 ? count! : null;
 }
 
+export function appServerRequestTimeoutMs(method: string): number {
+  return method === 'initialize' || method === 'thread/start' ? 120_000 : 30_000;
+}
+
 /** Uses a dedicated minimal config home; only session storage/auth are shared with the signed-in host.
  * The command sandbox denies the entire user home, including all runner/production credentials. */
 export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
@@ -76,7 +80,7 @@ export class PersistentCodexTaskAdapter implements CodexTaskAdapter {
       };
       const abort=()=>finish(new Error('Investigation interrupted'));
       const request=(method:string,params:unknown)=>new Promise<unknown>((resolve,reject)=>{
-        const id=++sequence; const timer=setTimeout(()=>{pending.delete(id);reject(new Error('Ambiguous app-server response; owner review required'));},30000);
+        const id=++sequence; const timer=setTimeout(()=>{pending.delete(id);reject(new Error('Ambiguous app-server response; owner review required'));},appServerRequestTimeoutMs(method));
         pending.set(id,{resolve,reject,timer});send({jsonrpc:'2.0',id,method,params});
       });
       const deadline=setTimeout(()=>finish(new Error('Investigation time budget reached')),60*60000);

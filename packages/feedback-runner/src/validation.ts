@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, resolve } from "node:path";
 import type { IsolatedCheckout, ValidationAdapter } from "./index.js";
@@ -29,6 +29,7 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
   const commandCwd=command.cwd ? resolve(checkout.path,command.cwd) : checkout.path;
   if(commandCwd!==checkout.path && !commandCwd.startsWith(checkout.path + "/")) throw new Error("Validation directory escapes checkout");
   let temporary: string | undefined;
+  let commandTemporary: string | undefined;
   let dependencies: readonly string[] | undefined;
   try {
     let executable = command.argv[0];
@@ -54,9 +55,15 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
       dependencies = feedbackDependencyPaths(checkout.path);
       // No user config or auth is needed to run a sandboxed command. Keep this control outside source.
       temporary = await mkdtemp(join(tmpdir(), "feedback-validation-codex-"));
-      const commandTmp = join(checkout.path, ".feedback-runner-tmp");
-      await mkdir(commandTmp, { recursive: true, mode: 0o700 });
-      env = { ...env, CODEX_HOME: temporary, TMPDIR: commandTmp, BUN_INSTALL_CACHE_DIR: join(commandTmp, "bun-cache") };
+      commandTemporary = await mkdtemp(join(tmpdir(), "feedback-validation-output-"));
+      // This exact empty parent-owned directory contains no existing private files.
+      // Keep checkout credential globs, home and installed dependencies protected.
+      config.permissions[config.default_permissions].filesystem[commandTemporary] = "write";
+      const browserTargets = join(commandTemporary, "browserslist-config");
+      await writeFile(browserTargets, "", {mode:0o600});
+      env = { ...env, CODEX_HOME: temporary, HOME: commandTemporary, TMPDIR: commandTemporary,
+        FEEDBACK_VALIDATION_OUTPUT_DIR: join(commandTemporary,"build-output"),
+        BROWSERSLIST_CONFIG: browserTargets, BUN_INSTALL_CACHE_DIR: join(commandTemporary, "bun-cache") };
       executable = sandboxExecutable;
       args = ["sandbox", "--permission-profile", config.default_permissions, "--include-managed-config", "--cd", commandCwd,
         "-c", `permissions.${config.default_permissions}=${inlineToml(config.permissions[config.default_permissions])}`,
@@ -70,6 +77,7 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
     throw error;
   } finally {
     if (temporary) await rm(temporary, { recursive: true, force: true });
+    if (commandTemporary) await rm(commandTemporary, {recursive:true,force:true});
   }
 }
 

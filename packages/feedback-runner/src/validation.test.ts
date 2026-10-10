@@ -22,7 +22,7 @@ describe("parent dependency preparation", () => {
       vi.stubEnv("DATABASE_URL", "queue-must-not-leak");
       const token = vi.fn(async () => "synthetic-package-read-token");
       const cleanCommand = (file: string) => ({ argv: [process.execPath, "-e",
-        `require('fs').writeFileSync('${file}', JSON.stringify({token:process.env.NODE_AUTH_TOKEN, provider:process.env.OPENAI_API_KEY, queue:process.env.DATABASE_URL}))`] as const });
+        `require('fs').writeFileSync('${file}', JSON.stringify({token:process.env.NODE_AUTH_TOKEN, provider:process.env.OPENAI_API_KEY, queue:process.env.DATABASE_URL,tmp:process.env.TMPDIR,home:process.env.HOME,output:process.env.FEEDBACK_VALIDATION_OUTPUT_DIR,browserTargets:process.env.BROWSERSLIST_CONFIG}))`] as const });
       const adapter = new CommandValidationAdapter({
         install: [{ argv: [installer, "install", "--frozen-lockfile", "--ignore-scripts"] }],
         prepare: [cleanCommand("prepare.json")], focused: [cleanCommand("focused.json")], shared: [cleanCommand("shared.json")],
@@ -36,7 +36,13 @@ describe("parent dependency preparation", () => {
       expect(token).toHaveBeenCalledOnce();
       expect(JSON.parse(await readFile(join(root, "install.json"), "utf8"))).toEqual({ token: "synthetic-package-read-token", ignore: "true", hooksDisabled: true });
       for (const file of ["prepare.json", "focused.json", "shared.json"]) {
-        expect(JSON.parse(await readFile(join(root, file), "utf8"))).toEqual({});
+        const recorded=JSON.parse(await readFile(join(root, file), "utf8"));
+        expect(recorded.token).toBeUndefined();expect(recorded.provider).toBeUndefined();expect(recorded.queue).toBeUndefined();
+        expect(recorded.tmp.startsWith(root)).toBe(false);
+        expect(recorded.home).toBe(recorded.tmp);
+        expect(recorded.output).toBe(join(recorded.tmp,"build-output"));
+        expect(recorded.browserTargets).toBe(join(recorded.tmp,"browserslist-config"));
+        await expect(readFile(recorded.browserTargets)).rejects.toMatchObject({code:"ENOENT"});
       }
       const sandboxCalls = (await readFile(join(root, "sandbox.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line));
       expect(sandboxCalls).toHaveLength(3);

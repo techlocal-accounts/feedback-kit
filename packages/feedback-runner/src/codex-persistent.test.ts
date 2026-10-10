@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { PersistentCodexTaskAdapter, usageTotal } from './codex-persistent.js';
+import { PersistentCodexTaskAdapter, usageTotal, appServerRequestTimeoutMs } from './codex-persistent.js';
 describe('persistent investigation budgets',()=>{
+ it('bounds cold initialization and thread creation separately from routine requests',()=>{
+  expect(appServerRequestTimeoutMs('initialize')).toBe(120000);
+  expect(appServerRequestTimeoutMs('thread/start')).toBe(120000);
+  expect(appServerRequestTimeoutMs('turn/start')).toBe(30000);
+ });
  it('uses cumulative total usage, including cached input',()=>{
   expect(usageTotal({method:'thread/tokenUsage/updated',params:{tokenUsage:{total:{totalTokens:456,cachedInputTokens:400},last:{totalTokens:1}}}})).toBe(456);
   expect(usageTotal({method:'item/completed',params:{tokenUsage:{total:{totalTokens:456}}}})).toBeNull();
