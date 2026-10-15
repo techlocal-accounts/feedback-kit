@@ -6,5 +6,10 @@
   "sha256": "6cad0f19679f33276089576965cb5b4d17f80d8fddb31ac6b89b373023e6f4d8",
   "anonymous": true,
   "registry": "https://registry.npmjs.org",
-  "verifiedAt": "2026-10-15T15:01:45.840653+00:00"
+  "verifiedAt": "2026-10-15T15:01:45.840653+00:00",
+  "freshAnonymousInstall": true,
+  "emptyConfigs": true,
+  "freshCache": true,
+  "lifecycleScriptsDisabled": true,
+  "controllerEntryPointVerified": true
 }

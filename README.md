@@ -6,7 +6,7 @@ Composable TypeScript building blocks for collecting, reviewing and optionally a
 | --- | --- | --- |
 | [`@techlocal/feedback-core`](packages/feedback-core/README.md) | `0.1.1` | Versioned submission/receipt contracts, visibility and routing policies, safe-state allowlists, and storage/reviewer/release interfaces. |
 | [`@techlocal/feedback-web`](packages/feedback-web/README.md) | `0.1.1` | Headless screenshot/file capture with privacy masking and bounded image compression. |
-| [`@techlocal/feedback-runner`](packages/feedback-runner/README.md) | `0.2.1` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
+| [`@techlocal/feedback-runner`](packages/feedback-runner/README.md) | `0.2.2` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
 
 Your application owns presentation, authentication, tenant isolation, private storage, reviewer access, database schema and release verification. Collection and review work without the runner. The core and web packages are framework-independent; the supplied runner adapters currently require macOS and a supported Codex CLI.
 
@@ -43,10 +43,10 @@ All three `@techlocal` packages are published on the public npm registry. Anonym
 ```sh
 npm install @techlocal/feedback-core@0.1.1 @techlocal/feedback-web@0.1.1
 # Optional local runner:
-npm install @techlocal/feedback-runner@0.2.1
+npm install @techlocal/feedback-runner@0.2.2
 ```
 
-The versions above passed registry integrity, anonymous install, entry-point and integration-example checks. Future source versions remain release candidates until the same checks pass. Use `@techlocal/feedback-core`, `@techlocal/feedback-core/limits`, `@techlocal/feedback-web` and `@techlocal/feedback-runner` in imports. An existing `@techlocal-accounts` installation must update its dependencies and imports to adopt the npm distribution. Core/web `0.1.1` and runner `0.2.1` preserve the corresponding GitHub release APIs.
+The versions above passed registry integrity, anonymous install, entry-point and integration-example checks. Future source versions remain release candidates until the same checks pass. Use `@techlocal/feedback-core`, `@techlocal/feedback-core/limits`, `@techlocal/feedback-web` and `@techlocal/feedback-runner` in imports. An existing `@techlocal-accounts` installation must update its dependencies and imports to adopt the npm distribution. Core/web `0.1.1` and runner `0.2.2` preserve the corresponding GitHub release APIs.
 
 ### Existing GitHub Packages consumers
 
@@ -93,3 +93,22 @@ The test suite uses synthetic actors, reports and DOM fixtures. It does not esta
 ## Licensing
 
 Project-owned code is licensed under the [MIT License](LICENSE), attributed to Tech Local (the verified repository owner/publisher) and contributors. Dependencies retain their own licenses and copyright notices; this project license does not replace their terms.
+
+## Verified automatic workers — 15 October 2026
+
+Runner 0.2.2 is published and verified through an anonymous fresh-cache install and registry
+integrity check. It adds a private intent-before-push publication journal, exact-fence recovery,
+serialized local polls, and health updates. Empty polls start no model. See the
+[npm receipt](docs/npm-runner-0.2.2-release.json).
+
+Stennar and PracticeDay now have installed local workers, enabled intake, tester visibility,
+and fresh ready/empty polling evidence. Both explicitly select Sol 6.1. PracticeDay Amplify
+job 89 succeeded and its canonical live release matches source `633b01e3`. Its automatic
+builds remain off; subsequent fixes still need the explicit release gate. Stennar's native
+release policy is unchanged. Local workers pause while the Mac is asleep or signed out.
+
+App receipts: [Stennar](https://github.com/techlocal-accounts/stennar/blob/main/docs/feedback-runner-activation-2026-10-15.json)
+and [PracticeDay](https://github.com/techlocal-accounts/practiceday/blob/main/docs/feedback-runner-activation-2026-10-15.json).
+Both queues had no eligible production bugs during activation. These receipts prove active
+configuration, scheduled polling and validation readiness; they do not claim a new automatic
+production report-to-fix journey. Suggestions and protected/clinical changes retain owner review.
