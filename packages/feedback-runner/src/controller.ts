@@ -83,7 +83,7 @@ export async function runLocalFeedbackPoll(input:{
     const config:LocalFeedbackRunnerConfig={...base,
       queue:{
         claimNext:async()=>{const next=await base.queue.claimNext();claim=next??undefined;if(next)await health('working',{reportId:next.reportId,runId:next.runId});return next;},
-        renew:c=>base.queue.renew(c),owns:c=>base.queue.owns(c),markAvailable:(...args)=>base.queue.markAvailable(...args),
+        renew:async c=>{const renewed=await base.queue.renew(c);if(renewed)await health('working',{reportId:c.reportId,runId:c.runId});return renewed;},owns:c=>base.queue.owns(c),markAvailable:(...args)=>base.queue.markAvailable(...args),
         finish:async(c,outcome)=>{
           if(pending&&outcome.status!=='implemented')return false;
           const result=await base.queue.finish(c,outcome);if(result&&pending)await persist('completed');return result;
