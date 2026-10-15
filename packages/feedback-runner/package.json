@@ -1,6 +1,6 @@
 {
   "name": "@techlocal/feedback-runner",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Local Codex orchestration for fenced feedback and incident queues",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-runner"},
   "license": "MIT",

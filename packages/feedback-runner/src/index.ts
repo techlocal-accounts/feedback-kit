@@ -1,3 +1,4 @@
+export {runLocalFeedbackPoll,type FeedbackPublicationRecord,type FeedbackReconciliation} from "./controller.js";
 import type { ReleaseIdentity, VerifiedDelivery } from "@techlocal/feedback-core";
 export { PersistentCodexTaskAdapter } from "./codex-persistent.js";
 export { LocalCodexTaskAdapter } from "./codex-cli.js";

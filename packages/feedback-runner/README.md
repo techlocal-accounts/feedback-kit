@@ -1,6 +1,6 @@
 # Local feedback runner
 
-Published npm release: `@techlocal/feedback-runner@0.2.1`. See the [repository release checklist](https://github.com/techlocal-accounts/feedback-kit/blob/main/docs/package-release.md) for the verified anonymous-install receipt. Existing GitHub Packages under `@techlocal-accounts/feedback-runner` retain their published versions.
+npm package: `@techlocal/feedback-runner@0.2.2`. See the [repository release checklist](https://github.com/techlocal-accounts/feedback-kit/blob/main/docs/package-release.md) for the verified anonymous-install receipt. Existing GitHub Packages under `@techlocal-accounts/feedback-runner` retain their published versions.
 
 Version `0.2.0` of `pollFeedbackOnce` coordinates dependency preparation, a local Codex implementation, a parent-created commit, a separate read-only Codex review, focused and shared validation, and a parent-owned fast-forward publication gate. An empty queue poll starts no model process. Suggestions and changes to protected paths return to owner review. A published commit is recorded as implemented; `verifyImplementedFeedback` marks it available only after the app supplies a verified delivery receipt.
 
@@ -88,3 +88,15 @@ Sol 6.1/Luna adapters require Codex CLI 0.162.0 or newer; older subscription cli
 The stable `code_mode_host` transport remains enabled for ordinary sandboxed execution. Optional code mode, inherited integrations and unapproved tools stay disabled; the named filesystem and network profile still governs commands.
 
 Persistent app-server initialization and thread creation have a bounded 120-second deadline for cold starts; routine requests retain 30 seconds. An ambiguous timeout still stops for owner review and never starts a duplicate task.
+
+## Durable local controller (0.2.2)
+
+`runLocalFeedbackPoll({directory, config, reconcile})` serializes polls with a private process
+lock and records approved publication intent before Git push. It keeps raw report text out of
+its journal. A lost acknowledgement or ambiguous push preserves the fence and stops new model
+work until the app's `reconcile(record)` checks Git ancestry and performs a conditional storage
+update using report/run/fence identity. Return `implemented`, `needs_review` or `pending`; an
+unresolved pending publication starts no model. Keep `directory` outside model checkouts.
+The controller writes private `health.json` and `publications/` records; these are operational
+state, not app delivery receipts. Empty polls start no model. Application installers still own
+scheduling, dependency recovery, credential loading, release gates and queue-specific recovery.
