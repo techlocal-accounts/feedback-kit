@@ -8,9 +8,9 @@ The current npm release candidates are:
 | --- | --- | --- |
 | `@techlocal/feedback-core` | `0.1.1` | Project-neutral contracts and packaged MIT license. |
 | `@techlocal/feedback-web` | `0.1.1` | Project-neutral capture helpers, MIT license and npm core dependency. |
-| `@techlocal/feedback-runner` | `0.2.0` | Persistent incident investigations, neutral defaults, MIT license and npm core dependency. |
+| `@techlocal/feedback-runner` | `0.2.1` | Installed package-manager pins, offline validation and persistent incident investigations. |
 
-The corresponding GitHub Packages releases under `@techlocal-accounts` already exist: core/web `0.1.1` and runner `0.2.0`. Earlier core/web `0.1.0` and runner `0.1.0`–`0.1.2` also remain available. These packages are public, but GitHub still requires authentication to download them. Do not overwrite, delete or rename any existing GitHub package or version. Moving an application to npm requires updating dependency names and imports; the APIs and persisted v1 report contracts are unchanged.
+The corresponding GitHub Packages releases under `@techlocal-accounts` already exist: core/web `0.1.1` and runner `0.2.0`. Runner `0.2.1` is a source release candidate, not an existing GitHub Packages release. Earlier core/web `0.1.0` and runner `0.1.0`–`0.1.2` also remain available. These packages are public, but GitHub still requires authentication to download them. Do not overwrite, delete or rename any existing GitHub package or version. Moving an application to npm requires updating dependency names and imports; the APIs and persisted v1 report contracts are unchanged.
 
 ## Build and inspect
 
@@ -38,7 +38,7 @@ Publish core, then web, then runner to `https://registry.npmjs.org` with public 
 ```sh
 npm publish /absolute/path/to/release-tarballs/techlocal-feedback-core-0.1.1.tgz --registry=https://registry.npmjs.org --access=public --ignore-scripts
 npm publish /absolute/path/to/release-tarballs/techlocal-feedback-web-0.1.1.tgz --registry=https://registry.npmjs.org --access=public --ignore-scripts
-npm publish /absolute/path/to/release-tarballs/techlocal-feedback-runner-0.2.0.tgz --registry=https://registry.npmjs.org --access=public --ignore-scripts
+npm publish /absolute/path/to/release-tarballs/techlocal-feedback-runner-0.2.1.tgz --registry=https://registry.npmjs.org --access=public --ignore-scripts
 ```
 
 Do not publish the private workspace root. Published versions are immutable. Before retrying a partial release, inspect each registry version and compare its integrity with the reviewed tarball; skip an existing identical version and stop on a mismatch. Never delete or overwrite a version to make a retry succeed. Revoke temporary publishing credentials after release completion.

@@ -1,6 +1,6 @@
 # Local feedback runner
 
-Public npm release candidate: `@techlocal/feedback-runner@0.2.0`. See the [repository release checklist](https://github.com/techlocal-accounts/feedback-kit/blob/main/docs/package-release.md) for publication status. Existing GitHub Packages under `@techlocal-accounts/feedback-runner` retain their published versions.
+Public npm release candidate: `@techlocal/feedback-runner@0.2.1`. See the [repository release checklist](https://github.com/techlocal-accounts/feedback-kit/blob/main/docs/package-release.md) for publication status. Existing GitHub Packages under `@techlocal-accounts/feedback-runner` retain their published versions.
 
 Version `0.2.0` of `pollFeedbackOnce` coordinates dependency preparation, a local Codex implementation, a parent-created commit, a separate read-only Codex review, focused and shared validation, and a parent-owned fast-forward publication gate. An empty queue poll starts no model process. Suggestions and changes to protected paths return to owner review. A published commit is recorded as implemented; `verifyImplementedFeedback` marks it available only after the app supplies a verified delivery receipt.
 
@@ -29,6 +29,29 @@ Package-manager configuration, dependency manifests/lockfiles, worker/governance
 The app chooses protected paths, focused and shared checks, release preparation, publication identity, and release verification. Keep existing web/native delivery gates in the trusted parent. Switch workers only after the storage adapters, publication journal and release gates have been tested against the existing queue and the old worker has no claim. This package does not upload native builds or start a hosting-provider release.
 
 Set `LocalGitPublicationAdapter`'s `authorName` and `authorEmail` to your approved automation identity when needed. If omitted, generated commits use `Feedback Runner <feedback-runner@example.invalid>`; they do not borrow a repository owner's identity.
+
+## Installed package managers (0.2.1)
+
+Select absolute paths to already installed package managers in the trusted parent. Bare
+`pnpm`, `bun`, `npm` and their companion commands now fail during adapter construction unless
+`packageManagerExecutables` supplies their absolute paths. This prevents a runtime's Corepack
+shim from trying to download a manager during network-denied validation. A concrete absolute
+`argv[0]` is also supported, including by older runner packages.
+
+```ts
+new CommandValidationAdapter({
+  packageManagerExecutables: { pnpm: "/absolute/path/to/installed/pnpm" },
+  install: [{ argv: ["pnpm", "install", "--frozen-lockfile", "--ignore-scripts"] }],
+  focused: [{ argv: ["pnpm", "test"] }],
+  shared: [{ argv: ["pnpm", "build"] }],
+});
+```
+
+Choose the installed manager binary, not a Corepack bootstrap shim. A read-only, parent-owned alias selects that same manager for nested scripts. Validation uses
+only that alias and the supported macOS system/Homebrew tool directories, so an inaccessible
+home-directory PATH entry cannot prevent shell startup. `COREPACK_ENABLE_NETWORK=0` prevents
+bootstrap network requests. No package credentials reach validation. Run `node scripts/verify-runner-sandbox.mjs --pnpm /absolute/installed/pnpm` on a pnpm worker host; it runs a real package script with a failing PATH shim and no model. This is a configuration migration
+for applications with bare package-manager commands; no report or database migration is needed.
 
 ## Persistent incident investigations (0.2.0)
 

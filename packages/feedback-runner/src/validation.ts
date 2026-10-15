@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, resolve } from "node:path";
 import type { IsolatedCheckout, ValidationAdapter } from "./index.js";
@@ -8,6 +8,19 @@ import { assertFeedbackDependencyPaths, assertFeedbackPermissionConfiguration, c
   feedbackDependencyPaths, inlineToml } from "./permissions.js";
 
 export interface ValidationCommand { cwd?: string; argv: readonly [string, ...string[]]; timeoutMs?: number }
+const packageManagers = ["pnpm", "pnpx", "npm", "npx", "bun", "bunx", "yarn", "yarnpkg"] as const;
+type PackageManager = typeof packageManagers[number];
+type PackageManagerExecutables = Readonly<Partial<Record<PackageManager, string>>>;
+
+function pinPackageManager(command: ValidationCommand, executables: PackageManagerExecutables): ValidationCommand {
+  const executable = command.argv[0];
+  if (!packageManagers.includes(basename(executable) as PackageManager)) return command;
+  const pinned = isAbsolute(executable) ? executable : executables[executable as PackageManager];
+  if (!pinned || !isAbsolute(pinned) || /[\r\n\0]/.test(pinned)) {
+    throw new Error("Package-manager commands require an absolute installed executable; configure packageManagerExecutables in the trusted parent");
+  }
+  return { ...command, argv: [pinned, ...command.argv.slice(1)] };
+}
 
 function assertLockedInstall(command: ValidationCommand): void {
   const [executable, verb, ...flags] = command.argv;
@@ -28,6 +41,7 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
   }
   const commandCwd=command.cwd ? resolve(checkout.path,command.cwd) : checkout.path;
   if(commandCwd!==checkout.path && !commandCwd.startsWith(checkout.path + "/")) throw new Error("Validation directory escapes checkout");
+  env = { ...env, COREPACK_ENABLE_NETWORK: "0" };
   let temporary: string | undefined;
   let commandTemporary: string | undefined;
   let dependencies: readonly string[] | undefined;
@@ -56,6 +70,13 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
       // No user config or auth is needed to run a sandboxed command. Keep this control outside source.
       temporary = await mkdtemp(join(tmpdir(), "feedback-validation-codex-"));
       commandTemporary = await mkdtemp(join(tmpdir(), "feedback-validation-output-"));
+      // Parent-owned aliases avoid both Corepack shims and denied home-directory PATH lookups.
+      const tools = join(temporary, "bin");
+      await mkdir(tools);
+      const manager = basename(command.argv[0]);
+      if (packageManagers.includes(manager as PackageManager)) await symlink(command.argv[0], join(tools, manager));
+      config.permissions[config.default_permissions].filesystem[tools] = "read";
+      const validationPath = `${tools}:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/opt/homebrew/sbin`;
       // This exact empty parent-owned directory contains no existing private files.
       // Keep checkout credential globs, home and installed dependencies protected.
       config.permissions[config.default_permissions].filesystem[commandTemporary] = "write";
@@ -67,7 +88,7 @@ async function runValidation(checkout: IsolatedCheckout, command: ValidationComm
       executable = sandboxExecutable;
       args = ["sandbox", "--permission-profile", config.default_permissions, "--include-managed-config", "--cd", commandCwd,
         "-c", `permissions.${config.default_permissions}=${inlineToml(config.permissions[config.default_permissions])}`,
-        ...command.argv];
+        "/usr/bin/env", `PATH=${validationPath}`, ...command.argv];
     }
     await runProcess({ executable, args, cwd: commandCwd, env,
       signal, timeoutMs: command.timeoutMs ?? 600_000, stderrLimit: credentialed ? 0 : 4_000 });
@@ -91,6 +112,8 @@ export class CommandValidationAdapter implements ValidationAdapter {
     safeEnvironment?: Record<string, string>;
     /** Resolve from parent-only Keychain/build secret storage, never a project env file. */
     packageReadToken?: () => Promise<string | undefined>;
+    /** Absolute, already installed package managers selected by the trusted parent, never source PATH shims. */
+    packageManagerExecutables?: PackageManagerExecutables;
     /** Trusted CLI binary; test fixtures may use a synthetic executable. */
     sandboxExecutable?: string;
     /** Only isolated deps/Git metadata and the pinned standards compatibility allowlist are accepted. */
@@ -98,6 +121,15 @@ export class CommandValidationAdapter implements ValidationAdapter {
   }) {
     for (const command of input.install) assertLockedInstall(command);
     validationEnvironment(input.safeEnvironment ?? {});
+    const executables = input.packageManagerExecutables ?? {};
+    for (const [name, executable] of Object.entries(executables)) {
+      if (!packageManagers.includes(name as PackageManager) || !isAbsolute(executable) || /[\r\n\0]/.test(executable)) {
+        throw new Error("Package-manager pins require an absolute installed executable");
+      }
+    }
+    const pinCommands = (commands: readonly ValidationCommand[] = []) => commands.map(command => pinPackageManager(command, executables));
+    this.input = { ...input, install: pinCommands(input.install), prepare: pinCommands(input.prepare),
+      focused: pinCommands(input.focused), shared: pinCommands(input.shared) };
   }
 
   async prepare(checkout: IsolatedCheckout, signal: AbortSignal): Promise<void> {

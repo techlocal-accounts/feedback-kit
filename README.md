@@ -6,7 +6,7 @@ Composable TypeScript building blocks for collecting, reviewing and optionally a
 | --- | --- | --- |
 | [`@techlocal/feedback-core`](packages/feedback-core/README.md) | `0.1.1` | Versioned submission/receipt contracts, visibility and routing policies, safe-state allowlists, and storage/reviewer/release interfaces. |
 | [`@techlocal/feedback-web`](packages/feedback-web/README.md) | `0.1.1` | Headless screenshot/file capture with privacy masking and bounded image compression. |
-| [`@techlocal/feedback-runner`](packages/feedback-runner/README.md) | `0.2.0` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
+| [`@techlocal/feedback-runner`](packages/feedback-runner/README.md) | `0.2.1` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
 
 Your application owns presentation, authentication, tenant isolation, private storage, reviewer access, database schema and release verification. Collection and review work without the runner. The core and web packages are framework-independent; the supplied runner adapters currently require macOS and a supported Codex CLI.
 
@@ -43,10 +43,10 @@ The three `@techlocal` packages target the public npm registry. Once the [releas
 ```sh
 npm install @techlocal/feedback-core@0.1.1 @techlocal/feedback-web@0.1.1
 # Optional local runner:
-npm install @techlocal/feedback-runner@0.2.0
+npm install @techlocal/feedback-runner@0.2.1
 ```
 
-Source versions remain release candidates until npm publication and anonymous installation are verified. Use `@techlocal/feedback-core`, `@techlocal/feedback-core/limits`, `@techlocal/feedback-web` and `@techlocal/feedback-runner` in imports. An existing `@techlocal-accounts` installation must update its dependencies and imports to adopt the npm distribution. Core/web `0.1.1` and runner `0.2.0` preserve the corresponding GitHub release APIs.
+Source versions remain release candidates until npm publication and anonymous installation are verified. Use `@techlocal/feedback-core`, `@techlocal/feedback-core/limits`, `@techlocal/feedback-web` and `@techlocal/feedback-runner` in imports. An existing `@techlocal-accounts` installation must update its dependencies and imports to adopt the npm distribution. Core/web `0.1.1` and runner `0.2.1` preserve the corresponding GitHub release APIs.
 
 ### Existing GitHub Packages consumers
 

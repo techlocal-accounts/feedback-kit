@@ -2,9 +2,14 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { CommandValidationAdapter, createFeedbackPermissionConfig } from "../packages/feedback-runner/dist/index.js";
 
+const options = process.argv.slice(2);
+if (options.length && (options.length !== 2 || options[0] !== "--pnpm" || !isAbsolute(options[1]))) {
+  throw new Error("Usage: node scripts/verify-runner-sandbox.mjs [--pnpm /absolute/installed/pnpm]");
+}
+const installedPnpm = options[1];
 if (process.platform !== "darwin") throw new Error("The feedback sandbox probe requires macOS");
 const root = realpathSync(mkdtempSync(join(tmpdir(), "feedback-permission-probe-")));
 const workspace = join(root, "repo");
@@ -71,6 +76,34 @@ if(process.argv[2]==='validation')fs.writeFileSync('validation-evidence.json',JS
   } catch (error) {
     if (!error.message.includes("changed isolated dependency directories")) throw error;
     evidence.validationRejectsSpoofedDependencies = true;
+    rmSync(join(workspace,"spoof-app"),{recursive:true,force:true});
+  }
+  if (installedPnpm) {
+    const shim = join(workspace, "shadow-shim");
+    mkdirSync(shim);
+    writeFileSync(join(shim, "pnpm"), "#!/bin/sh\nexit 99\n", {mode:0o700});
+    writeFileSync(join(workspace, "package.json"), JSON.stringify({private:true,
+      scripts:{"feedback:probe":"node package-manager-probe.cjs"}}));
+    writeFileSync(join(workspace, "package-manager-probe.cjs"), `const fs=require('fs');
+      const tools=process.env.PATH.split(':').find(path=>path.includes('feedback-validation-codex-')&&path.endsWith('/bin'));
+      let aliasWriteDenied=false;
+      try{fs.writeFileSync(require('path').join(tools,'unexpected-tool'),'no');}catch(error){aliasWriteDenied=['EACCES','EPERM'].includes(error.code);}
+      fs.writeFileSync('manager-evidence.json',JSON.stringify({
+      offline:process.env.COREPACK_ENABLE_NETWORK==='0',credentialAbsent:!process.env.NODE_AUTH_TOKEN,
+      shadowShimBypassed:!process.env.PATH.includes('shadow-shim'),aliasWriteDenied}));`);
+    const previousPath = process.env.PATH;
+    try {
+      process.env.PATH = `${shim}:${previousPath ?? ""}`;
+      const manager = new CommandValidationAdapter({install:[],
+        focused:[{argv:["pnpm","run","feedback:probe"]}], shared:[],
+        packageManagerExecutables:{pnpm:installedPnpm}});
+      await manager.focused({path:workspace,baseSha:"a".repeat(40)},[],new AbortController().signal);
+      evidence.installedPackageManager = JSON.parse(readFileSync(join(workspace,"manager-evidence.json"),"utf8"));
+      if (Object.values(evidence.installedPackageManager).some(value => value !== true)) throw new Error("Installed package-manager proof failed");
+    } finally {
+      if (previousPath === undefined) delete process.env.PATH;
+      else process.env.PATH = previousPath;
+    }
   }
   process.stdout.write(`${JSON.stringify(evidence)}\n`);
 } finally {
