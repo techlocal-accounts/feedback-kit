@@ -1,6 +1,6 @@
 # Local feedback runner
 
-Public npm release candidate: `@techlocal/feedback-runner@0.2.1`. See the [repository release checklist](https://github.com/techlocal-accounts/feedback-kit/blob/main/docs/package-release.md) for publication status. Existing GitHub Packages under `@techlocal-accounts/feedback-runner` retain their published versions.
+Published npm release: `@techlocal/feedback-runner@0.2.1`. See the [repository release checklist](https://github.com/techlocal-accounts/feedback-kit/blob/main/docs/package-release.md) for the verified anonymous-install receipt. Existing GitHub Packages under `@techlocal-accounts/feedback-runner` retain their published versions.
 
 Version `0.2.0` of `pollFeedbackOnce` coordinates dependency preparation, a local Codex implementation, a parent-created commit, a separate read-only Codex review, focused and shared validation, and a parent-owned fast-forward publication gate. An empty queue poll starts no model process. Suggestions and changes to protected paths return to owner review. A published commit is recorded as implemented; `verifyImplementedFeedback` marks it available only after the app supplies a verified delivery receipt.
 

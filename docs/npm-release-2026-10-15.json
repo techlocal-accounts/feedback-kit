@@ -1,0 +1,36 @@
+{
+  "sourceCommit": "d6c7f5ed966485d269592879dcc465e96fc948a8",
+  "anonymous": true,
+  "freshCache": true,
+  "emptyConfigs": true,
+  "packages": [
+    {
+      "name": "@techlocal/feedback-core",
+      "version": "0.1.1",
+      "integrity": "sha512-A7AgV8NiPKM/EEIPoSFbQIvI0cZLupvHqfFY1uBtlYGV85QAcvr3pKgpGr6290RXoaev8GqJImC+lcEXMyqEnQ==",
+      "latestMatches": true,
+      "sha256": "8516692fd21d49c7062d3dd9ea2278cc0403b295aa20b383befdfac6bc23405e"
+    },
+    {
+      "name": "@techlocal/feedback-web",
+      "version": "0.1.1",
+      "integrity": "sha512-nPmnskDejjgwq7V2HhUecQSb7cgo3qGnzjm69Q0IvmLtlOlba1/fEaFY+ESuyoGwDXwOrGLbF8CyGIw7dmnsVw==",
+      "latestMatches": true,
+      "sha256": "a6ea0afe811c0a2b3df52c19cc6d1b7ad261091977469ca8222e01368300fb78"
+    },
+    {
+      "name": "@techlocal/feedback-runner",
+      "version": "0.2.1",
+      "integrity": "sha512-lpCYA7MLmArc2C4ksI2SXC6/R3zuH/kD/v8Tf3QKHgkA+uZ8DBD8FwLtSphp/IyRrQQ0WUcEpf7AzF7OLsl6LA==",
+      "latestMatches": true,
+      "sha256": "5d92d683d6e29f0c382ba881ffac193b393c18b474c5649bf86b97df923dff55"
+    }
+  ],
+  "entryPoints": 4,
+  "runnerGuardVerified": true,
+  "serverExampleTypecheck": true,
+  "legacyImportsAbsent": true,
+  "registry": "https://registry.npmjs.org",
+  "verifiedAt": "2026-10-15T09:48:45.829043+00:00",
+  "lifecycleScriptsDisabled": true
+}

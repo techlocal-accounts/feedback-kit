@@ -24,7 +24,10 @@ validation still receives no package, provider or queue credentials.
 
 ## Distribution
 
-Runner 0.2.1 is a source release candidate until registry publication and anonymous installation
-are verified. This Mac had no npm maintainer login during preparation. Existing GitHub packages
-remain unchanged. Apps using older runners can adopt the equivalent fix immediately by supplying
+Core/web 0.1.1 and runner 0.2.1 are published on npm and their anonymous installation is verified.
+The maintainer completed npm login, enabled 2FA and approved the publish verification. No bypass
+token was created. Registry versions, latest tags and integrity match the reviewed tarballs; all
+four imports, the installed runner guard and the server example typecheck passed with empty npm
+configuration and no credentials. See [the release receipt](npm-release-2026-10-15.json). Existing
+GitHub packages remain unchanged. Apps using older runners can adopt the equivalent fix immediately by supplying
 absolute installed commands and a bounded runtime PATH; this does not require a data migration.

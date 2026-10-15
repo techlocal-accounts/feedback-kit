@@ -2,7 +2,13 @@
 
 Project-owned code is MIT licensed. Public npm distribution uses the verified `@techlocal` organization scope; the repository remains `techlocal-accounts/feedback-kit`. Dependencies remain separately licensed. Packages ship compiled project code and do not bundle dependency source.
 
-The current npm release candidates are:
+## Verified npm release — 15 October 2026
+
+All three versions below are published and anonymously installable from npm. The [verification receipt](npm-release-2026-10-15.json) records reviewed source commit `d6c7f5ed966485d269592879dcc465e96fc948a8`, tarball integrity and checksums. `latest` matches each pinned version. A fresh install used empty user/global/project npm configuration, a new cache and no credentials, with lifecycle scripts disabled. All four entry points, the installed runner pin guard and the server integration example typecheck passed. Web/runner resolve the npm core dependency without legacy scope imports.
+
+Publication used the existing maintainer account with interactive 2FA. No bypass token was created. npm accepted the packages before its publish-time scan made them installable; availability was verified after scanning rather than inferred from CLI success.
+
+The published versions are:
 
 | Package | Version | Change |
 | --- | --- | --- |
@@ -10,7 +16,7 @@ The current npm release candidates are:
 | `@techlocal/feedback-web` | `0.1.1` | Project-neutral capture helpers, MIT license and npm core dependency. |
 | `@techlocal/feedback-runner` | `0.2.1` | Installed package-manager pins, offline validation and persistent incident investigations. |
 
-The corresponding GitHub Packages releases under `@techlocal-accounts` already exist: core/web `0.1.1` and runner `0.2.0`. Runner `0.2.1` is a source release candidate, not an existing GitHub Packages release. Earlier core/web `0.1.0` and runner `0.1.0`–`0.1.2` also remain available. These packages are public, but GitHub still requires authentication to download them. Do not overwrite, delete or rename any existing GitHub package or version. Moving an application to npm requires updating dependency names and imports; the APIs and persisted v1 report contracts are unchanged.
+The corresponding GitHub Packages releases under `@techlocal-accounts` already exist: core/web `0.1.1` and runner `0.2.0`. Runner `0.2.1` is published on npm; it is not an existing GitHub Packages release. Earlier core/web `0.1.0` and runner `0.1.0`–`0.1.2` also remain available. These packages are public, but GitHub still requires authentication to download them. Do not overwrite, delete or rename any existing GitHub package or version. Moving an application to npm requires updating dependency names and imports; the APIs and persisted v1 report contracts are unchanged.
 
 ## Build and inspect
 
