@@ -61,7 +61,7 @@ minimal config home; share only signed-in auth/session storage and the configure
 Never use the primary config home or copy broad sandbox, plugin or MCP settings into this home.
 The selected CLI must support the configured model; verify a bounded synthetic turn before activation.
 The adapter disables integrations and applies the same minimal-read, denied-home/no-network profile.
-Usage updates call `onUsage`; stop at the shared implementation/review `tokenBudget` (published 0.2.2 max50,000; source 0.3.0 max200,000).
+Usage updates call `onUsage`; stop at the shared implementation/review `tokenBudget` (published 0.2.2 max50,000; source 0.3.0 max500,000).
 One in-flight response can overshoot the threshold before its usage notification arrives. Receipt
 failure, lost lease, ambiguous RPC, timeout or budget exhaustion stops the child process group.
 
@@ -107,6 +107,6 @@ Trusted execution settings now accept `subagents: "off" | "auto"`, default Off. 
 
 A trusted queue may set `ownerApproved: true` for a suggestion explicitly approved by an authenticated reviewer. Suggestions without this flag still require owner review. `ownerInstructions` accepts at most 5,000 characters from that authenticated reviewer; keep original report text in untrusted `task` evidence. Neither field authorizes protected changes, merging or deployment.
 
-The 0.3.0 source candidate supports a bounded aggregate budget up to 200,000 tokens across parent, helpers and independent review. Callers should set an explicit per-run and daily budget. Parallel-agent context is counted, including cached input; the old 50,000 ceiling cannot reliably finish even a small delegated workflow.
+The 0.3.0 source candidate supports a bounded aggregate budget up to 500,000 tokens across parent, helpers and independent review. Callers should set an explicit per-run and daily budget. Parallel-agent context is counted, including cached input; the old 50,000 ceiling cannot reliably finish even a small delegated workflow.
 
 The source candidate also preserves pnpm hook suppression when its installed executable has a different basename, and excludes source symlinks from dependency-directory grants. This avoids treating a tracked literal `[project]/node_modules` symlink as a glob permission. Existing source and Git contents remain unchanged. A trusted caller may supply credential-free `readOnlyPaths` to the persistent adapter, for example a pinned installed package manager under an isolated `node_modules` directory. Use the repository's installed manager version; bootstrap downloads cannot run in network-denied validation.

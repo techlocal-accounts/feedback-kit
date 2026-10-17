@@ -12,7 +12,10 @@ describe('persistent investigation budgets',()=>{
   expect(usageTotal({method:'thread/tokenUsage/updated',params:{tokenUsage:{total:{totalTokens:-1}}}})).toBeNull();
  });
  it('rejects unbounded and invalid model budgets',()=>{
-  for(const tokenBudget of [0,-1,200001,NaN])expect(()=>new PersistentCodexTaskAdapter({executable:'codex',codexHome:'/tmp/test',tokenBudget,onThread:async()=>{},onUsage:async()=>{}})).toThrow();
+  for(const tokenBudget of [0,-1,500001,NaN])expect(()=>new PersistentCodexTaskAdapter({executable:'codex',codexHome:'/tmp/test',tokenBudget,onThread:async()=>{},onUsage:async()=>{}})).toThrow();
+ });
+ it('allows room for a repository implementation, helpers and independent review',()=>{
+  expect(()=>new PersistentCodexTaskAdapter({executable:'codex',codexHome:'/tmp/test',tokenBudget:500000,onThread:async()=>{},onUsage:async()=>{}})).not.toThrow();
  });
 });
 
