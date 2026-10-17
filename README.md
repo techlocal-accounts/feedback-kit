@@ -8,6 +8,8 @@ Composable TypeScript building blocks for collecting, reviewing and optionally a
 | [`@techlocal/feedback-web`](packages/feedback-web/README.md) | `0.1.1` | Headless screenshot/file capture with privacy masking and bounded image compression. |
 | [`@techlocal/feedback-runner`](packages/feedback-runner/README.md) | `0.2.2` | Optional local Codex processing for fenced feedback and incident queues, isolated validation, independent review and parent-owned Git publication. |
 
+An optional [standard review inbox and action components](registry/feedback-review/README.md) now supplies a reusable receiving UI as a shadcn source block. The core capture packages remain headless.
+
 Your application owns presentation, authentication, tenant isolation, private storage, reviewer access, database schema and release verification. Collection and review work without the runner. The core and web packages are framework-independent; the supplied runner adapters currently require macOS and a supported Codex CLI.
 
 New npm distribution uses the `@techlocal` scope. Existing GitHub Packages under `@techlocal-accounts` remain available to current consumers. The exported API and v1 report contracts are unchanged; switching registries requires updating package names and imports, not migrating persisted reports.

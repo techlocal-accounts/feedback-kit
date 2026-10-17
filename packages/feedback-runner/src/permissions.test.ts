@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile, symlink } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertFeedbackPermissionConfiguration, createFeedbackPermissionConfig } from "./permissions.js";
@@ -77,4 +77,13 @@ describe("feedback read boundaries", () => {
       expect(JSON.stringify(filesystem)).not.toContain("**/node_modules");
     } finally { await rm(root, { recursive: true, force: true }); }
   });
+});
+
+it('does not follow or grant a read subtree for source symlinks named node_modules',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'feedback-symlink-dependency-'));
+ try {
+ await mkdir(join(root,'[project]'));await symlink('/nonexistent/other-user/node_modules',join(root,'[project]','node_modules'));
+ const config=createFeedbackPermissionConfig({checkoutPath:root,access:'write'});
+ expect(config.permissions[config.default_permissions]!.filesystem[root]).not.toHaveProperty('[project]/node_modules');
+ }finally{await rm(root,{recursive:true,force:true});}
 });

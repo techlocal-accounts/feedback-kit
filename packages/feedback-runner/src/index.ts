@@ -14,6 +14,10 @@ export interface FencedClaim {
   kind: "bug" | "suggestion" | "incident";
   /** Redacted, bounded text prepared by the host app. Never include private attachment URLs. */
   task: string;
+  /** Only a trusted queue may record explicit owner approval of a suggestion. */
+  ownerApproved?: boolean;
+  /** Bounded instructions authored by an authenticated owner, never report content. */
+  ownerInstructions?: string;
   observedRelease: ReleaseIdentity;
   leaseMs: number;
 }
@@ -116,11 +120,12 @@ async function assertLease(queue: FencedQueue, claim: FencedClaim, signal: Abort
 export async function pollFeedbackOnce(config: LocalFeedbackRunnerConfig): Promise<PollResult> {
   const claim = await config.queue.claimNext();
   if (!claim) return { kind: "empty" };
-  if (claim.kind !== "bug" && claim.kind !== "incident") {
+  if (claim.kind !== "bug" && claim.kind !== "incident" && !(claim.kind === "suggestion" && claim.ownerApproved === true)) {
     const reason = "Suggestions require owner review";
     await config.queue.finish(claim, { status: "needs_review", reason });
     return { kind: "needs_review", reportId: claim.reportId, reason };
   }
+  if (claim.ownerInstructions !== undefined && (typeof claim.ownerInstructions !== "string" || claim.ownerInstructions.length > 5000)) throw new Error("Invalid owner instructions");
   if (!claim.fence || !claim.runId || claim.leaseMs < 1_000 || claim.leaseMs > 3_600_000) {
     throw new Error("Invalid fenced feedback claim");
   }
