@@ -128,7 +128,9 @@ export class CommandValidationAdapter implements ValidationAdapter {
       }
     }
     const pinCommands = (commands: readonly ValidationCommand[] = []) => commands.map(command => pinPackageManager(command, executables));
-    this.input = { ...input, install: pinCommands(input.install), prepare: pinCommands(input.prepare),
+    const installs=input.install.map(command=>basename(command.argv[0]) === "pnpm" && !command.argv.includes("--ignore-pnpmfile")
+      ? {...command,argv:[...command.argv,"--ignore-pnpmfile"] as [string,...string[]]} : command);
+    this.input = { ...input, install: pinCommands(installs), prepare: pinCommands(input.prepare),
       focused: pinCommands(input.focused), shared: pinCommands(input.shared) };
   }
 

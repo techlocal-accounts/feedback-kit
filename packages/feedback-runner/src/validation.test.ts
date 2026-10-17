@@ -45,11 +45,11 @@ describe("parent dependency preparation", () => {
     } finally { await rm(root, {recursive:true,force:true}); }
   });
 
-  it("gives the read token only to a locked script-disabled installer", async () => {
+  it.each(["pnpm","pnpm.cjs"])("gives the read token only to a locked script-disabled installer (%s)", async (executableName) => {
     const root = await mkdtemp(join(tmpdir(), "feedback-install-test-"));
     try {
-      const installer = join(root, "pnpm");
-      await writeFile(installer, `#!${process.execPath}\nimport {writeFileSync} from 'node:fs';\nwriteFileSync('install.json', JSON.stringify({token:process.env.NODE_AUTH_TOKEN, provider:process.env.OPENAI_API_KEY, queue:process.env.DATABASE_URL, ignore:process.env.npm_config_ignore_scripts, hooksDisabled:process.argv.includes('--ignore-pnpmfile')}));\n`);
+      const installer = join(root, executableName);
+      await writeFile(installer, `#!${process.execPath}\nconst {writeFileSync}=require('node:fs');\nwriteFileSync('install.json', JSON.stringify({token:process.env.NODE_AUTH_TOKEN, provider:process.env.OPENAI_API_KEY, queue:process.env.DATABASE_URL, ignore:process.env.npm_config_ignore_scripts, hooksDisabled:process.argv.includes('--ignore-pnpmfile')}));\n`);
       await chmod(installer, 0o700);
       const sandboxExecutable = join(root, "codex-fixture");
       await writeFile(sandboxExecutable, `#!${process.execPath}\nconst args=process.argv.slice(2);if(args[0]==='--version'){process.stdout.write('codex-cli 0.144.6');}else{require('fs').appendFileSync('sandbox.jsonl',JSON.stringify(args)+'\\n');const index=args.lastIndexOf('-c')+2;const result=require('child_process').spawnSync(args[index],args.slice(index+1),{stdio:'inherit'});process.exit(result.status??1);}\n`);

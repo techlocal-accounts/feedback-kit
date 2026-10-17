@@ -24,7 +24,7 @@ export function feedbackDependencyPaths(checkoutPath: string): string[] {
     for (const entry of entries) {
       if (++entriesSeen > 100_000) throw new Error("Feedback checkout dependency inspection exceeds its bound");
       const path = join(directory, entry.name);
-      if (entry.name === "node_modules") { paths.add(path); continue; }
+      if (entry.name === "node_modules" && entry.isDirectory()) { paths.add(path); continue; }
       if (entry.isDirectory() && ![".git", ".next", "dist", "build", ".feedback-runner-tmp"].includes(entry.name)) visit(path);
     }
   };
