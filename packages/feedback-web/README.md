@@ -7,3 +7,13 @@ Published npm release: `@techlocal/feedback-web@0.1.1`. See the [repository rele
 Call `captureBeforeComposerOpen(() => captureFeedbackViewport(options), image => openComposer(image))` from the trigger. The app's composer supplies preview, annotation, remove, and retry controls. Add `data-feedback-capture-exclude` to the trigger/composer so they do not appear in the capture. Mark all sensitive elements `data-feedback-private` or add app selectors. For clinical routes, set `clinical.isClinicalScreen` and require selectors for every clinical content wrapper. Required clinical selectors are automatically masked; a missing mask throws before rasterization and leaves the composer unopened.
 
 The default clone mask hides form controls, editable content, data-marked private/PII/PHI regions, iframe, video, and canvas content. Audit each app's dynamic content and selectors; the generic mask cannot infer every private text node.
+
+## Paste screenshots into an app-owned composer
+
+Bind `handleFeedbackImagePaste(event, files => void addImages(files))` to the open
+composer's `onPaste`. Route files through the same bounded compression, preview,
+annotation/removal and authenticated private upload flow as the file picker.
+Ordinary text/HTML paste is unchanged. This uses the paste event and does not request
+`navigator.clipboard.read()` permission. Repeated deliberate pastes are separate user
+choices; the app enforces capacity and pending-submit guards. Do not bind globally.
+User-selected images are not automatically privacy-masked; let users inspect them before sending.

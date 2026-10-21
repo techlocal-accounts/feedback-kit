@@ -1,6 +1,6 @@
 {
   "name": "@techlocal/feedback-web",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Headless web feedback capture with privacy masking and bounded image compression",
   "repository": {"type": "git", "url": "git+https://github.com/techlocal-accounts/feedback-kit.git", "directory": "packages/feedback-web"},
   "license": "MIT",

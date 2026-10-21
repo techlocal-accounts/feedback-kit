@@ -173,3 +173,32 @@ export async function captureBeforeComposerOpen<T>(capture: () => Promise<T>, op
   openComposer(image);
   return image;
 }
+
+export type FeedbackClipboardData = {
+  items?: ArrayLike<Pick<DataTransferItem, "kind" | "type" | "getAsFile">>;
+  files?: ArrayLike<File>;
+};
+
+/** Read only the user-initiated paste event; no clipboard permission or background read. */
+export function getFeedbackClipboardImages(data: FeedbackClipboardData | null): File[] {
+  if (!data) return [];
+  const images = Array.from(data.items ?? [])
+    .filter(item => item.kind === "file" && item.type.startsWith("image/"))
+    .map(item => item.getAsFile())
+    .filter((file): file is File => file !== null);
+  // Browsers expose the same images through items and files. Prefer one representation.
+  return images.length ? images : Array.from(data.files ?? []).filter(file => file.type.startsWith("image/"));
+}
+
+/** Bind to the open composer. The app retains compression, limits, upload and error handling. */
+export function handleFeedbackImagePaste(
+  event: {clipboardData: FeedbackClipboardData | null; preventDefault(): void},
+  acceptImages: (files: File[]) => void,
+): boolean {
+  const files = getFeedbackClipboardImages(event.clipboardData);
+  if (!files.length) return false;
+  // Prevent the browser from inserting clipboard HTML or a file name into the description.
+  event.preventDefault();
+  acceptImages(files);
+  return true;
+}
